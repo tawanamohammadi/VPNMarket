@@ -21,6 +21,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Telegram\Bot\Keyboard\Keyboard;
 use Illuminate\Support\Facades\Storage;
 use Telegram\Bot\Laravel\Facades\Telegram;
 use Illuminate\Support\Str;
@@ -196,15 +197,34 @@ class OrderResource extends Resource
                                             throw new \Exception("کاربر {$uniqueUsername} یافت نشد.");
                                         }
                                     } else {
-                                        if ($linkType === 'subscription') $clientData['subId'] = Str::random(16);
-                                        $addRes = $xui->addClient($inboundData['id'], $clientData);
-                                        if ($addRes && ($addRes['success'] ?? false)) {
-                                            $finalUuid = $addRes['generated_uuid'] ?? json_decode($addRes['obj']['settings'], true)['clients'][0]['id'];
-                                            $finalSubId = $addRes['generated_subId'] ?? $clientData['subId'];
-                                            if ($targetServer) $targetServer->increment('current_users');
-                                        } else throw new \Exception('خطا در ساخت کاربر');
-                                    }
+                                        // 🔥 خرید جدید - اول چک کن اگه وجود داشت آپدیت کن
+                                        $clients = $xui->getClients($inboundData['id']);
+                                        $existingClient = collect($clients)->first(function ($c) use ($uniqueUsername) {
+                                            return strtolower(trim($c['email'])) === strtolower(trim($uniqueUsername));
+                                        });
 
+                                        if ($existingClient) {
+                                            // کاربر وجود داره، آپدیتش کن
+                                            $clientData['id'] = $existingClient['id'];
+                                            $clientData['subId'] = $existingClient['subId'] ?? Str::random(16);
+                                            $upRes = $xui->updateClient($inboundData['id'], $existingClient['id'], $clientData);
+                                            if ($upRes && ($upRes['success'] ?? false)) {
+                                                $xui->resetClientTraffic($inboundData['id'], $uniqueUsername);
+                                                $finalUuid = $existingClient['id'];
+                                                $finalSubId = $clientData['subId'];
+                                                Log::info('Existing client updated: ' . $uniqueUsername);
+                                            } else throw new \Exception('خطا در آپدیت کاربر موجود');
+                                        } else {
+                                            // کاربر جدیده، بسازش
+                                            if ($linkType === 'subscription') $clientData['subId'] = Str::random(16);
+                                            $addRes = $xui->addClient($inboundData['id'], $clientData);
+                                            if ($addRes && ($addRes['success'] ?? false)) {
+                                                $finalUuid = $addRes['generated_uuid'] ?? json_decode($addRes['obj']['settings'], true)['clients'][0]['id'];
+                                                $finalSubId = $addRes['generated_subId'] ?? $clientData['subId'];
+                                                if ($targetServer) $targetServer->increment('current_users');
+                                            } else throw new \Exception('خطا در ساخت کاربر: ' . ($addRes['msg'] ?? 'Unknown error'));
+                                        }
+                                    }
                                     // ساخت لینک (با تنظیمات سرور درست)
                                     $stream = json_decode($inboundData['streamSettings'] ?? '{}', true);
                                     $proto = $inboundData['protocol'] ?? 'vless';
@@ -241,7 +261,8 @@ class OrderResource extends Resource
                                                 $p['host'] = $stream['wsSettings']['headers']['Host'] ?? $tunAddr;
                                             }
 
-                                            $remark = "🇺🇸-" . $uniqueUsername;
+
+                                            $remark = ($targetServer->location->flag ?? "🏳️") . "-" . $uniqueUsername;
                                             $qs = http_build_query($p);
                                             $finalConfig = "vless://{$finalUuid}@{$tunAddr}:{$tunPort}?{$qs}#" . rawurlencode($remark);
                                             break;
@@ -291,10 +312,96 @@ class OrderResource extends Resource
 
                                 if ($user->telegram_chat_id) {
                                     try {
-                                        $msg = $isRenewal ? "✅ سرویس تمدید شد.\nلینک جدید:\n`$finalConfig`" : "✅ سرویس فعال شد.\nکانفیگ:\n`$finalConfig`";
                                         Telegram::setAccessToken($settings->get('telegram_bot_token'));
-                                        Telegram::sendMessage(['chat_id' => $user->telegram_chat_id, 'text' => $msg, 'parse_mode' => 'Markdown']);
-                                    } catch (\Exception $e) {}
+
+                                        // انتخاب سفارش صحیح برای نمایش اطلاعات
+                                        $displayOrder = $isRenewal ? $originalOrder : $order;
+
+                                        $displayOrder->load(['server.location', 'plan']);
+
+                                        $server = $displayOrder->server;
+                                        $serverName = $server?->name ?? 'سرور اصلی';
+                                        $locationFlag = $server?->location?->flag ?? '🏳️';
+                                        $locationName = $server?->location?->name ?? 'نامشخص';
+
+                                        $planModel = $displayOrder->plan;
+
+
+                                        // تابع escape کمکی
+                                        $escape = function($text) {
+                                            $chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'];
+                                            return str_replace($chars, array_map(fn($c) => '\\' . $c, $chars), $text);
+                                        };
+
+                                        // ساخت پیام کامل
+                                        $msgText = "✅ *" . ($isRenewal ? "تمدید موفق!" : "خرید موفق!") . "*\n\n";
+                                        $msgText .= "📦 *پلن:* `" . $escape($planModel->name) . "`\n";
+
+                                        if (!$isRenewal) {
+                                            $msgText .= "🌍 *موقعیت:* {$locationFlag} " . $escape($locationName) . "\n";
+                                            $msgText .= "🖥 *سرور:* " . $escape($serverName) . "\n";
+                                        }
+
+                                        $msgText .= "💾 *حجم:* {$planModel->volume_gb} گیگابایت\n";
+                                        $msgText .= "📅 *مدت:* {$planModel->duration_days} روز\n";
+                                        $msgText .= "⏳ *انقضا:* `{$displayOrder->expires_at->format('Y/m/d H:i')}`\n";
+                                        $msgText .= "👤 *یوزرنیم:* `{$displayOrder->panel_username}`\n\n";
+                                        $msgText .= "🔗 *لینک کانفیگ شما:*\n";
+                                        $msgText .= "`{$finalConfig}`\n\n";
+                                        $msgText .= $escape("⚠️ روی لینک بالا کلیک کنید تا کپی شود");
+
+                                        // ساخت کیبورد
+                                        $keyboard = Keyboard::make()->inline()
+                                            ->row([
+                                                Keyboard::inlineButton(['text' => '📋 کپی لینک کانفیگ', 'callback_data' => "copy_link_{$displayOrder->id}"]),
+                                                Keyboard::inlineButton(['text' => '📱 QR Code', 'callback_data' => "qrcode_order_{$displayOrder->id}"])
+                                            ])
+                                            ->row([
+                                                Keyboard::inlineButton(['text' => '🛠 سرویس‌های من', 'callback_data' => '/my_services']),
+                                                Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+                                            ]);
+
+                                        Telegram::sendMessage([
+                                            'chat_id' => $user->telegram_chat_id,
+                                            'text' => $msgText,
+                                            'parse_mode' => 'MarkdownV2',
+                                            'reply_markup' => $keyboard
+                                        ]);
+
+                                    } catch (\Exception $e) {
+                                        Log::error('Error sending TG success message (Admin Approve): ' . $e->getMessage(), [
+                                            'order_id' => $order->id,
+                                            'trace' => $e->getTraceAsString()
+                                        ]);
+
+                                        // ✅ Fallback با دکمه‌های کامل
+                                        try {
+                                            Telegram::setAccessToken($settings->get('telegram_bot_token'));
+
+                                            $displayOrderId = $isRenewal ? $originalOrder->id : $order->id;
+
+                                            $keyboard = Keyboard::make()->inline()
+                                                ->row([
+                                                    Keyboard::inlineButton(['text' => '📋 کپی لینک کانفیگ', 'callback_data' => "copy_link_{$displayOrderId}"]),
+                                                    Keyboard::inlineButton(['text' => '📱 QR Code', 'callback_data' => "qrcode_order_{$displayOrderId}"])
+                                                ])
+                                                ->row([
+                                                    Keyboard::inlineButton(['text' => '🛠 سرویس‌های من', 'callback_data' => '/my_services']),
+                                                    Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+                                                ]);
+
+                                            $simpleMsg = ($isRenewal ? "✅ سرویس تمدید شد." : "✅ سرویس فعال شد.") . "\n\n`{$finalConfig}`";
+
+                                            Telegram::sendMessage([
+                                                'chat_id' => $user->telegram_chat_id,
+                                                'text' => $simpleMsg,
+                                                'parse_mode' => 'Markdown',
+                                                'reply_markup' => $keyboard
+                                            ]);
+                                        } catch (\Exception $e2) {
+                                            Log::error('Fallback message also failed: ' . $e2->getMessage());
+                                        }
+                                    }
                                 }
                             }
                         });

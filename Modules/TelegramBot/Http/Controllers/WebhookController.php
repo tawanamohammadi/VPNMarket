@@ -1139,10 +1139,32 @@ class WebhookController extends Controller
     protected function sendCardPaymentInfo($chatId, $orderId, $messageId)
     {
         $order = Order::find($orderId);
-        if (!$order) {
-            $this->sendOrEditMainMenu($chatId, "❌ سفارش یافت نشد.", $messageId);
-            return;
+        if (!$order->server_id) {
+
+            $user = $order->user;
+            if ($user->bot_state && Str::contains($user->bot_state, 'selected_loc:')) {
+                preg_match('/selected_loc:(\d+)/', $user->bot_state, $matches);
+                if (!empty($matches[1])) {
+                    $locationId = (int) $matches[1];
+
+
+                    if (class_exists('Modules\MultiServer\Models\Server')) {
+                        $bestServer = \Modules\MultiServer\Models\Server::where('location_id', $locationId)
+                            ->where('is_active', true)
+                            ->whereRaw('current_users < capacity')
+                            ->orderBy('current_users', 'asc')
+                            ->first();
+
+                        if ($bestServer) {
+                            $order->update(['server_id' => $bestServer->id]);
+                        }
+                    }
+                }
+            }
         }
+
+        $user = $order->user;
+        $user->update(['bot_state' => 'waiting_receipt_' . $orderId]);
         $user = $order->user;
         $user->update(['bot_state' => 'waiting_receipt_' . $orderId]);
 
@@ -2128,6 +2150,7 @@ class WebhookController extends Controller
                 $newRenewalOrder = $user->orders()->create([
                     'plan_id' => $plan->id,
                     'status' => 'paid',
+
                     'source' => 'telegram_renewal',
                     'amount' => $plan->price,
                     'expires_at' => null,
@@ -2258,6 +2281,7 @@ class WebhookController extends Controller
 
         $newRenewalOrder = $user->orders()->create([
             'plan_id' => $plan->id,
+            'server_id' => $originalOrder->server_id,
             'status' => 'pending',
             'source' => 'telegram_renewal',
             'amount' => $plan->price,
@@ -2599,6 +2623,8 @@ class WebhookController extends Controller
             $botToken = $this->settings->get('telegram_bot_token');
             // ✅ اصلاح: حذف space بین bot و token
 
+
+
             $apiUrl = "https://api.telegram.org/bot{$botToken}/getChatMember";
 
 
@@ -2642,7 +2668,10 @@ class WebhookController extends Controller
             $username = ltrim($channelId, '@');
             // ✅ اصلاح: حذف space بعد از t.me/
 
+
+
             $channelLink = "https://t.me/{$username}";
+
 
             $channelDisplayName = "@" . $username;
         } elseif (preg_match('/^-100\d+$/', $channelId)) {
@@ -2669,6 +2698,85 @@ class WebhookController extends Controller
     /**
      * ✅ اصلاح: حذف فاصله اضافی از URL دانلود فایل
      */
+
+    /**
+     * ارسال پیام موفقیت‌آمیز بودن خرید با دکمه‌ها
+     * این متد هم برای پرداخت کیف پول و هم کارت به کارت استفاده می‌شه
+     */
+    protected function sendPurchaseSuccessMessage($user, Order $order, $messageId = null)
+    {
+        // بارگذاری اطلاعات کامل سفارش
+        $order->load(['server.location', 'plan']);
+
+        $link = $order->config_details;
+
+        // آماده‌سازی اطلاعات سرور و کشور
+        $serverName = 'سرور اصلی';
+        $locationFlag = '🏳️';
+        $locationName = 'نامشخص';
+
+        if ($order->server) {
+            $serverName = $order->server->name;
+            if ($order->server->location) {
+                $locationFlag = $order->server->location->flag ?? '🏳️';
+                $locationName = $order->server->location->name;
+            }
+        }
+
+        // ساخت پیام کامل و خفن
+        $message = "✅ *خرید موفق!*\n\n";
+        $message .= "📦 *پلن:* `{$this->escape($order->plan->name)}`\n";
+        $message .= "🌍 *موقعیت:* {$locationFlag} {$this->escape($locationName)}\n";
+        $message .= "🖥 *سرور:* {$this->escape($serverName)}\n";
+        $message .= "💾 *حجم:* {$order->plan->volume_gb} گیگابایت\n";
+        $message .= "📅 *مدت:* {$order->plan->duration_days} روز\n";
+        $message .= "⏳ *انقضا:* `{$order->expires_at->format('Y/m/d H:i')}`\n";
+        $message .= "👤 *یوزرنیم:* `{$order->panel_username}`\n\n";
+        $message .= "🔗 *لینک کانفیگ شما:*\n";
+        $message .= "`{$link}`\n\n";
+        $message .= "⚠️ روی لینک بالا کلیک کنید تا کپی شود";
+
+        // کیبورد با دکمه‌های کاربردی
+        $keyboard = Keyboard::make()->inline()
+            ->row([
+                Keyboard::inlineButton(['text' => '📋 کپی لینک کانفیگ', 'callback_data' => "copy_link_{$order->id}"]),
+                Keyboard::inlineButton(['text' => '📱 QR Code', 'callback_data' => "qrcode_order_{$order->id}"])
+            ])
+            ->row([
+                Keyboard::inlineButton(['text' => '🛠 سرویس‌های من', 'callback_data' => '/my_services']),
+                Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+            ]);
+
+        try {
+            if ($messageId) {
+                // ویرایش پیام قبلی (اگر وجود داشته باشه)
+                Telegram::editMessageText([
+                    'chat_id' => $user->telegram_chat_id,
+                    'message_id' => $messageId,
+                    'text' => $message,
+                    'parse_mode' => 'MarkdownV2',
+                    'reply_markup' => $keyboard
+                ]);
+            } else {
+                // ارسال پیام جدید
+                Telegram::sendMessage([
+                    'chat_id' => $user->telegram_chat_id,
+                    'text' => $message,
+                    'parse_mode' => 'MarkdownV2',
+                    'reply_markup' => $keyboard
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending purchase success message: ' . $e->getMessage());
+            // اگر خطا بود، بدون کیبورد بفرست (fallback)
+            Telegram::sendMessage([
+                'chat_id' => $user->telegram_chat_id,
+                'text' => $message,
+                'parse_mode' => 'MarkdownV2'
+            ]);
+        }
+    }
+
     protected function savePhotoAttachment($update, $directory)
     {
         $photo = collect($update->getMessage()->getPhoto())->last();
