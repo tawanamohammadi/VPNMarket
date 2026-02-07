@@ -9,6 +9,7 @@ use App\Models\TelegramBotSetting;
 use App\Services\XUIService;
 use App\Models\User;
 use App\Services\MarzbanService;
+use App\Services\PasargadService;
 use App\Models\Inbound;
 use Modules\Ticketing\Events\TicketCreated;
 use Modules\Ticketing\Events\TicketReplied;
@@ -1963,11 +1964,34 @@ class WebhookController extends Controller
                     $configData['panel_client_id'] = $uuid;
                     $configData['panel_sub_id'] = $subId;
 
+                }
+            }
+            // ==========================================
+            // پنل PASARGAD
+            // ==========================================
+            elseif ($panelType === 'pasargad') {
+                $pasargad = new PasargadService(
+                    $settings->get('pasargad_host'),
+                    $settings->get('pasargad_sudo_username'),
+                    $settings->get('pasargad_sudo_password'),
+                    $settings->get('pasargad_node_hostname')
+                );
+                
+                $response = $pasargad->createUser([
+                    'username' => $uniqueUsername,
+                    'expire' => $order->expires_at->timestamp,
+                    'data_limit' => $plan->volume_gb * 1024 * 1024 * 1024,
+                ]);
+
+                if (!empty($response['subscription_url'])) {
+                    $configData['link'] = $response['subscription_url'];
+                    $configData['username'] = $uniqueUsername;
                 } else {
-                    throw new \Exception($response['msg'] ?? 'Error creating user in X-UI');
+                    Log::error('Pasargad user creation failed.', ['response' => $response]);
+                    return null;
                 }
             } else {
-                throw new \Exception("Panel type not supported");
+                throw new \Exception("Panel type not supported: {$panelType}");
             }
 
             if ($isMultiServer && isset($targetServer)) {
@@ -2434,9 +2458,33 @@ class WebhookController extends Controller
                         'link' => $originalOrder->config_details,
                         'username' => $uniqueUsername
                     ];
+                }
+            }
+            // --- PASARGAD ---
+            elseif ($panelType === 'pasargad') {
+                $pasargad = new PasargadService(
+                    $settings->get('pasargad_host'),
+                    $settings->get('pasargad_sudo_username'),
+                    $settings->get('pasargad_sudo_password'),
+                    $settings->get('pasargad_node_hostname')
+                );
+
+                $updateResponse = $pasargad->updateUser($uniqueUsername, [
+                    'expire' => $newExpiryDate->timestamp,
+                    'data_limit' => $plan->volume_gb * 1073741824,
+                    'status' => 'active',
+                ]);
+                $resetResponse = $pasargad->resetUserTraffic($uniqueUsername);
+
+                if ($updateResponse !== null && $resetResponse !== false) {
+                    $originalOrder->update(['expires_at' => $newExpiryDate]);
+                    return [
+                        'link' => $originalOrder->config_details,
+                        'username' => $uniqueUsername
+                    ];
                 } else {
-                    $errorMsg = $response['msg'] ?? 'Unknown Error';
-                    throw new \Exception("❌ خطا در بروزرسانی کلاینت: " . $errorMsg);
+                    Log::error('Pasargad renewal failed.', ['update' => $updateResponse, 'reset' => $resetResponse]);
+                    return null;
                 }
             } else {
                 throw new \Exception("❌ نوع پنل پشتیبانی نمی‌شود: {$panelType}");
@@ -3057,6 +3105,27 @@ class WebhookController extends Controller
 
                 } else {
                     throw new \Exception($response['msg'] ?? 'خطا در ساخت کاربر در پنل X-UI');
+                }
+            }
+            // --- PASARGAD ---
+            elseif ($panelType === 'pasargad') {
+                $pasargad = new PasargadService(
+                    $settings->get('pasargad_host'),
+                    $settings->get('pasargad_sudo_username'),
+                    $settings->get('pasargad_sudo_password'),
+                    $settings->get('pasargad_node_hostname')
+                );
+                
+                $response = $pasargad->createUser([
+                    'username' => $uniqueUsername,
+                    'expire' => $expiresAt->timestamp,
+                    'data_limit' => $dataLimitBytes,
+                ]);
+
+                if ($response && !empty($response['subscription_url'])) {
+                    $configLink = $response['subscription_url'];
+                } else {
+                    throw new \Exception('خطا در ارتباط با پنل پاسارگاد.');
                 }
             } else {
                 throw new \Exception('نوع پنل در تنظیمات مشخص نشده است.');
