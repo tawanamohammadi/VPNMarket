@@ -261,7 +261,7 @@ class PasargadService
         $baseUrl = $this->baseUrl;
         $nodeHostname = $this->nodeHostname ? trim($this->nodeHostname) : null;
         
-        Log::debug('Pasargad generating sub link', [
+        Log::debug('Pasargad generating sub link [Ultra-Robust]', [
             'base_url' => $baseUrl,
             'node_hostname' => $nodeHostname,
             'username' => $username
@@ -275,13 +275,17 @@ class PasargadService
         // تجزیه baseUrl برای استخراج پروتکل و دامنه
         $parsed = parse_url($baseUrl);
         $scheme = $parsed['scheme'] ?? 'https';
+        
+        // اولویت با nodeHostname است، اگر نبود از hostِ baseUrl استفاده می‌کنیم
         $host = $nodeHostname ?: ($parsed['host'] ?? '');
         
-        // ساخت لینک نهایی بدون پورت ادمین
-        // اگر کاربر بخواهد پورت خاصی در nodeHostname بگذارد (domain:port)، اینجا اعمال می‌شود
-        $finalLink = "{$scheme}://{$host}/sub/{$username}";
+        // 🔥 گام نهایی برای اطمینان: حذف هرگونه پورت (مثل :8000) از رشته host
+        // این کار باعث می‌شود حتی اگر در تنظیمات پورت اشتباهی وارد شده باشد، لینک سابسکریپشن تمیز بماند
+        $cleanHost = preg_replace('/:\d+/', '', $host);
         
-        Log::debug('Pasargad final sub link', ['link' => $finalLink]);
+        $finalLink = "{$scheme}://{$cleanHost}/sub/{$username}";
+        
+        Log::info('Pasargad final sub link generated:', ['link' => $finalLink]);
         
         return $finalLink;
     }
