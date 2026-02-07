@@ -1113,6 +1113,10 @@ class WebhookController extends Controller
                     $locationFlag = $order->server->location->flag ?? '🏳️';
                     $locationName = $order->server->location->name;
                 }
+            } elseif ($this->settings->get('panel_type') === 'pasargad') {
+                $serverName = 'PasarGuard Eagle';
+                $locationName = 'سرویس Eagle';
+                $locationFlag = '🦅';
             }
 
             // ساخت پیام کامل
@@ -2982,16 +2986,15 @@ class WebhookController extends Controller
             $dataLimitBytes = $volumeMB * 1024 * 1024;
 
             $configLink = null;
-            $panelType = $settings->get('panel_type');
+            $panelType = $settings->get('panel_type') ?? 'marzban';
+            $targetServer = null;
+            $locationFlag = '🏳️';
+            $locationName = 'نامشخص';
 
             // --- تنظیمات سرور (Multi-Server Logic) ---
             $isMultiLocationEnabled = filter_var($settings->get('enable_multilocation', false), FILTER_VALIDATE_BOOLEAN);
-            $targetServer = null;
 
-            // 1. خواندن آیدی سرور تنظیم شده برای تست (از تنظیمات جدید)
-            $forcedServerId = $settings->get('trial_server_id');
-
-            // مقادیر پیش‌فرض
+            // مقادیر پیش‌فرض X-UI (اگر نخواهیم از مولتی لوکیشن استفاده کنیم)
             $xuiHost = $settings->get('xui_host');
             $xuiUser = $settings->get('xui_user');
             $xuiPass = $settings->get('xui_pass');
@@ -2999,6 +3002,8 @@ class WebhookController extends Controller
             $linkType = $settings->get('xui_link_type', 'single');
 
             if ($isMultiLocationEnabled && class_exists('Modules\MultiServer\Models\Server')) {
+                // 1. خواندن آیدی سرور تنظیم شده برای تست (از تنظیمات جدید)
+                $forcedServerId = $settings->get('trial_server_id');
 
                 // الف) اگر ادمین سرور خاصی را در تنظیمات انتخاب کرده باشد
                 if (!empty($forcedServerId)) {
@@ -3014,7 +3019,7 @@ class WebhookController extends Controller
                         ->first();
                 }
 
-                // اعمال تنظیمات سرور انتخاب شده
+                // اعمال تنظیمات سرور انتخاب شده (فقط برای X-UI در حال حاضر)
                 if ($targetServer) {
                     $panelType = 'xui';
                     $xuiHost = $targetServer->full_host;
@@ -3022,7 +3027,18 @@ class WebhookController extends Controller
                     $xuiPass = $targetServer->password;
                     $inboundId = $targetServer->inbound_id;
                     $linkType = $targetServer->link_type ?? 'single';
+                    
+                    if ($targetServer->location) {
+                        $locationFlag = $targetServer->location->flag ?? '🏳️';
+                        $locationName = $targetServer->location->name;
+                    }
                 }
+            }
+
+            // اگر پنل پاسارگاد است و نام سرور/لوکیشن نداریم، یک مقدار بهتر از "نامشخص" بگذاریم
+            if ($panelType === 'pasargad' && $locationName === 'نامشخص') {
+                $locationName = 'سرویس Eagle';
+                $locationFlag = '🦅';
             }
 
             if ($panelType === 'marzban') {
@@ -3113,7 +3129,6 @@ class WebhookController extends Controller
                             $tunnelAddress = $targetServer->tunnel_address;
                             $tunnelPort = $targetServer->tunnel_port ?? 443;
 
-                            // 🔥 چک کردن وضعیت TLS از دیتابیس (مثل بخش خرید)
                             $tls = filter_var($targetServer->tunnel_is_https, FILTER_VALIDATE_BOOLEAN);
 
                             $params = ['type' => $streamSettings['network'] ?? 'tcp'];
@@ -3122,7 +3137,6 @@ class WebhookController extends Controller
                                 $params['sni'] = $tunnelAddress;
                             } else {
                                 $params['security'] = 'none';
-                                // 🔥 اگر TLS خاموشه، encryption رو هم none کن
                                 if($protocol === 'vless') $params['encryption'] = 'none';
                             }
 
@@ -3131,19 +3145,10 @@ class WebhookController extends Controller
                                 $params['host'] = $streamSettings['wsSettings']['headers']['Host'] ?? $tunnelAddress;
                             }
 
-                            $flag = $targetServer->location->flag ?? '🏳️';
-
-                            $remarkText = $flag . "-" . $uniqueUsername;
-
-
-
-
+                            $remarkText = $locationFlag . "-" . $uniqueUsername;
                             $qs = http_build_query($params);
-//
                             $configLink = "vless://{$uuid}@{$tunnelAddress}:{$tunnelPort}?{$qs}#" . rawurlencode($remarkText);
                             break;
-
-
 
                         default: // single
                             if (!$uuid) throw new \Exception("UUID extracted failed");
@@ -3186,19 +3191,8 @@ class WebhookController extends Controller
             }
 
             if ($configLink) {
-                if ($configLink) {
-                    $user->increment('trial_accounts_taken');
-
-                    // ذخیره لینک توی cache برای ۱۰ دقیقه (برای دکمه کپی)
-                    \Illuminate\Support\Facades\Cache::put("trial_link_{$user->id}", $configLink, now()->addMinutes(10));
-
-                    // بارگذاری اطلاعات سرور برای نمایش کشور
-                    $locationFlag = '🏳️';
-                    $locationName = 'نامشخص';
-                    if ($targetServer && $targetServer->location) {
-                        $locationFlag = $targetServer->location->flag ?? '🏳️';
-                        $locationName = $targetServer->location->name;
-                    }
+                $user->increment('trial_accounts_taken');
+                \Illuminate\Support\Facades\Cache::put("trial_link_{$user->id}", $configLink, now()->addMinutes(10));
 
                     // ساخت پیام کامل
                     $message = $this->escape("✅ اکانت تست شما با موفقیت ساخته شد!") . "\n\n";

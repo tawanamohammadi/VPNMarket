@@ -258,7 +258,23 @@ class PasargadService
      */
     public function generateSubscriptionLink(string $username): string
     {
-        $baseUrl = $this->nodeHostname ? rtrim($this->nodeHostname, '/') : $this->baseUrl;
+        $baseUrl = $this->baseUrl;
+        
+        // اگر آدرس نود (سابسکریپشن) جداگانه تنظیم شده است
+        if ($this->nodeHostname) {
+            $nodeHost = trim($this->nodeHostname);
+            
+            // اگر با http شروع شده، یعنی یک URL کامل است
+            if (str_starts_with($nodeHost, 'http')) {
+                return rtrim($nodeHost, '/') . "/sub/{$username}";
+            }
+            
+            // در غیر این صورت، پروتکل را از baseUrl می‌گیریم اما پورت را حذف می‌کنیم (فرض بر CDN یا استاندارد)
+            $parsedBase = parse_url($baseUrl);
+            $scheme = $parsedBase['scheme'] ?? 'https';
+            return "{$scheme}://{$nodeHost}/sub/{$username}";
+        }
+        
         return "{$baseUrl}/sub/{$username}";
     }
 
