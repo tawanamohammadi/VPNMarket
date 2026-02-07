@@ -3222,7 +3222,7 @@ class WebhookController extends Controller
                     ]);
 
                     Log::info('Trial account created successfully', ['user_id' => $user->id, 'username' => $uniqueUsername]);
-                    }}
+            }
         } catch (\Exception $e) {
             Log::error('Trial Account Creation Failed', [
                 'user_id' => $user->id,
