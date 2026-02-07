@@ -1981,7 +1981,7 @@ class WebhookController extends Controller
                     'username' => $uniqueUsername,
                     'expire' => $order->expires_at->timestamp,
                     'data_limit' => $plan->volume_gb * 1024 * 1024 * 1024,
-                    'group_ids' => $settings->get('pasargad_paid_group_id') ? [(int)$settings->get('pasargad_paid_group_id')] : [1],
+                    'group_ids' => [(int)($plan->pasargad_group_id ?? $settings->get('pasargad_paid_group_id') ?? 1)],
                 ]);
 
                 if (!empty($response['subscription_url'])) {

@@ -162,7 +162,7 @@ trait ManagesServiceProvisioning
                     ? $pasargadService->updateUser($uniqueUsername, $userData)
                     : $pasargadService->createUser(array_merge($userData, [
                         'username' => $uniqueUsername,
-                        'group_ids' => $settings->get('pasargad_paid_group_id') ? [(int)$settings->get('pasargad_paid_group_id')] : [1],
+                        'group_ids' => [(int)($plan->pasargad_group_id ?? $settings->get('pasargad_paid_group_id') ?? 1)],
                     ]));
 
                 if ($response && (isset($response['subscription_url']) || isset($response['username']))) {
