@@ -244,24 +244,40 @@ class WebhookController extends Controller
 
         if ($user->bot_state) {
             Log::info("HTM_BOT_STATE_ACTIVE", ['state' => $user->bot_state]);
-            if ($user->bot_state === 'awaiting_deposit_amount') {
-                $this->processDepositAmount($user, $text);
-                return;
-            } elseif (Str::startsWith($user->bot_state, 'awaiting_new_ticket_') || Str::startsWith($user->bot_state, 'awaiting_ticket_reply')) {
-                $this->processTicketConversation($user, $text, $update);
-                return;
-            } elseif (Str::startsWith($user->bot_state, 'awaiting_discount_code|')) {
-                $orderId = Str::after($user->bot_state, 'awaiting_discount_code|');
-                $this->processDiscountCode($user, $orderId, $text);
-                return;
-            } elseif (Str::startsWith($user->bot_state, 'awaiting_username_for_order|')) {
-                $planId = Str::after($user->bot_state, 'awaiting_username_for_order|');
-                $this->processUsername($user, $planId, $text);
+            
+            // اگر کاربر /start فرستاد، وضعیت را ریست کن تا از بن‌بست خارج شود
+            if ($text === '/start') {
+                Log::info("HTM_RESETTING_STATE_BY_START");
+                $user->update(['bot_state' => null]);
+            } 
+            else {
+                if ($user->bot_state === 'awaiting_deposit_amount') {
+                    $this->processDepositAmount($user, $text);
+                    return;
+                } elseif (Str::startsWith($user->bot_state, 'awaiting_new_ticket_') || Str::startsWith($user->bot_state, 'awaiting_ticket_reply')) {
+                    $this->processTicketConversation($user, $text, $update);
+                    return;
+                } elseif (Str::startsWith($user->bot_state, 'awaiting_discount_code|')) {
+                    $orderId = Str::after($user->bot_state, 'awaiting_discount_code|');
+                    $this->processDiscountCode($user, $orderId, $text);
+                    return;
+                } elseif (Str::startsWith($user->bot_state, 'awaiting_username_for_order|')) {
+                    $planId = Str::after($user->bot_state, 'awaiting_username_for_order|');
+                    $this->processUsername($user, $planId, $text);
+                    return;
+                } elseif (Str::startsWith($user->bot_state, 'waiting_receipt_')) {
+                    Log::info("HTM_WAITING_RECEIPT_FEEDBACK");
+                    Telegram::sendMessage([
+                        'chat_id' => $chatId,
+                        'text' => $this->escape("⚠️ شما در مرحله ارسال فیش واریزی هستید.\n\n📸 لطفاً تصویر رسید خود را ارسال کنید.\n❌ اگر قصد لغو دارید، دستور /start را بفرستید."),
+                        'parse_mode' => 'MarkdownV2'
+                    ]);
+                    return;
+                }
+                
+                Log::info("HTM_BOT_STATE_UNKNOWN_STOP");
                 return;
             }
-            
-            Log::info("HTM_BOT_STATE_UNKNOWN_STOP");
-            return;
         }
 
         // نرمال‌سازی متن برای دکمه‌هایی که ممکن است نیم‌فاصله داشته باشند یا نداشته باشند
