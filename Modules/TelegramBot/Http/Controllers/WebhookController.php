@@ -817,7 +817,7 @@ class WebhookController extends Controller
                     $this->sendOrEditMainMenu($chatId, $this->escape("چه کار دیگری برایتان انجام دهم?"));
 
                     $adminChatId = $this->settings->get('telegram_admin_chat_id');
-                    if ($adminChatId) {
+                    if ($adminChatId && is_numeric($adminChatId)) {
                         $orderType = $order->renews_order_id ? 'تمدید سرویس' : ($order->plan_id ? 'خرید سرویس' : 'شارژ کیف پول');
 
                         $adminMessage = "🧾 *رسید جدید برای سفارش \\#{$orderId}*\n\n";
@@ -1546,14 +1546,18 @@ class WebhookController extends Controller
             ->orderBy('expires_at', 'desc')
             ->get();
 
-    if ($orders->isEmpty()) {
-        $keyboard = Keyboard::make()->inline()->row([
-            Keyboard::inlineButton(['text' => '🛒 خرید سرویس جدید', 'callback_data' => '/plans']),
-            Keyboard::inlineButton(['text' => '⬅️ بازگشت به منوی اصلی', 'callback_data' => '/start']),
-        ]);
-        $this->sendOrEditMessage($user->telegram_chat_id, $this->escape("⚠️ شما هیچ سرویس فعال یا اخیراً منقضی شده‌ای ندارید."), $keyboard, $messageId);
-        return;
-    }
+        $debugTotal = $user->orders()->count();
+        $debugPaid = $user->orders()->where('status', 'paid')->count();
+        Log::info("Checking services for user {$user->id}. Found: " . $orders->count() . " (Total in DB: {$debugTotal}, Paid in DB: {$debugPaid})");
+
+        if ($orders->isEmpty()) {
+            $keyboard = Keyboard::make()->inline()->row([
+                Keyboard::inlineButton(['text' => '🛒 خرید سرویس جدید', 'callback_data' => '/plans']),
+                Keyboard::inlineButton(['text' => '⬅️ بازگشت به منوی اصلی', 'callback_data' => '/start']),
+            ]);
+            $this->sendOrEditMessage($user->telegram_chat_id, $this->escape("⚠️ شما هیچ سرویس فعال یا اخیراً منقضی شده‌ای ندارید."), $keyboard, $messageId);
+            return;
+        }
 
     $message = "🛠 *سرویس‌های شما*\n";
     $message .= "━━━━━━━━━━━━━━━\n\n";
@@ -1849,13 +1853,13 @@ class WebhookController extends Controller
         $message .= "━━━━━━━━━━━━━━━\n\n";
         $message .= $this->escape("با اشتراک‌گذاری لینک زیر، دوستان خود را به ربات دعوت کنید و هدیه بگیرید!") . "\n\n";
         
-        $rewardText = "💸 با هر خرید موفق دوستانتان، *" . $this->escape($referrerReward . " تومان") . "* به کیف پول شما اضافه می‌شود.\n\n";
+        $rewardText = "💸 " . $this->escape("با هر خرید موفق دوستانتان، ") . "*" . $this->escape($referrerReward . " تومان") . "*" . $this->escape(" به کیف پول شما اضافه می‌شود.") . "\n\n";
         $message .= $rewardText;
         
-        $message .= "🔗 *لینک دعوت شما \\(برای کپی لمس کنید\\):*\n";
+        $message .= "🔗 " . $this->escape("لینک دعوت شما (برای کپی لمس کنید):") . "\n";
         $message .= "`" . $this->escapeCode($referralLink) . "`\n\n";
         
-        $message .= "👥 دعوت‌های موفق شما: *" . $this->escape($referralCount . " نفر") . "*";
+        $message .= "👥 " . $this->escape("دعوت‌های موفق شما:") . " *" . $this->escape($referralCount . " نفر") . "*";
 
         $keyboard = Keyboard::make()->inline()->row([
             Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
