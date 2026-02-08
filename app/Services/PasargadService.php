@@ -125,7 +125,12 @@ class PasargadService
                         // فقط path است (مثل /sub/...) - باید baseUrl یا nodeHostname رو اضافه کنیم
                         $parsed = parse_url($this->baseUrl);
                         $scheme = $parsed['scheme'] ?? 'https';
+                        
+                        // تهیه هاست بدون پروتکل
                         $host = $this->nodeHostname ?: ($parsed['host'] ?? '');
+                        if (str_contains($host, '://')) {
+                            $host = parse_url($host, PHP_URL_HOST);
+                        }
                         
                         // حذف پورت از host اگر موجود بود
                         $host = preg_replace('/:\d+/', '', $host);

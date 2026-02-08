@@ -1119,23 +1119,22 @@ class WebhookController extends Controller
                 $locationFlag = '🦅';
             }
 
-            // ساخت پیام کامل
-            $message = "✅ *خرید موفق!*\n\n";
+            // ساخت پیام کامل با ظاهر پریمیوم
+            $message = "🔑 *اشتراک شما با موفقیت فعال شد*\n\n";
             $message .= "📦 *پلن:* `{$this->escape($order->plan->name)}`\n";
             $message .= "🌍 *موقعیت:* {$locationFlag} {$this->escape($locationName)}\n";
-            $message .= "🖥 *سرور:* {$this->escape($serverName)}\n";
+            $message .= "👤 *نام کاربری:* `{$order->panel_username}`\n";
             $message .= "💾 *حجم:* {$order->plan->volume_gb} گیگابایت\n";
-            $message .= "📅 *مدت:* {$order->plan->duration_days} روز\n";
-            $message .= "⏳ *انقضا:* `{$order->expires_at->format('Y/m/d H:i')}`\n";
-            $message .= "👤 *یوزرنیم:* `{$order->panel_username}`\n\n";
-            $message .= "🔗 *لینک کانفیگ شما:*\n";
+            $message .= "⏳ *انقضا:* `{$order->expires_at->format('Y/m/d H:i')}`\n\n";
+            $message .= "🔗 *لینک اشتراک اختصاصی:*\n";
             $message .= "`{$link}`\n\n";
-            $message .= "⚠️ روی لینک بالا کلیک کنید تا کپی شود";
+            $message .= "👆🏻 " . $this->escape("برای کپی روی لینک بالا بزنید!") . "\n\n";
+            $message .= $this->escape("⚠️ توصیه می‌شود از اپلیکیشن رسمی پیشنهادی استفاده کنید.");
 
             // کیبورد با دکمه کپی لینک
             $keyboard = Keyboard::make()->inline()
                 ->row([
-                    Keyboard::inlineButton(['text' => '📋 کپی لینک کانفیگ', 'callback_data' => "copy_link_{$order->id}"]),
+                    Keyboard::inlineButton(['text' => '📋 کپی لینک اشتراک', 'callback_data' => "copy_link_{$order->id}"]),
                     Keyboard::inlineButton(['text' => '📱 QR Code', 'callback_data' => "qrcode_order_{$order->id}"])
                 ])
                 ->row([
@@ -2981,7 +2980,15 @@ class WebhookController extends Controller
             $volumeMB = (int) $settings->get('trial_volume_mb', 500);
             $durationHours = (int) $settings->get('trial_duration_hours', 24);
 
-            $uniqueUsername = "trial-{$user->id}-" . ($currentTrials + 1);
+            // ایجاد یوزرنیم بر اساس ایدی تلگرام برای حرفه‌ای‌تر شدن
+            $telegramId = $user->telegram_chat_id;
+            $uniqueUsername = "trial_" . $telegramId;
+            
+            // اگر قبلاً تستی گرفته بود، یک پسوند اضافه کن
+            if ($currentTrials > 0) {
+                $uniqueUsername .= "_" . ($currentTrials + 1);
+            }
+
             $expiresAt = now()->addHours($durationHours);
             $dataLimitBytes = $volumeMB * 1024 * 1024;
 
@@ -3194,23 +3201,25 @@ class WebhookController extends Controller
                 $user->increment('trial_accounts_taken');
                 \Illuminate\Support\Facades\Cache::put("trial_link_{$user->id}", $configLink, now()->addMinutes(10));
 
-                    // ساخت پیام کامل
-                    $message = $this->escape("✅ اکانت تست شما با موفقیت ساخته شد!") . "\n\n";
+                    // ساخت پیام کامل با ظاهر پریمیوم
+                    $message = "🔑 *اشتراک تست شما با موفقیت ساخته شد*\n\n";
+                    $message .= "👤 *نام کاربری شما:* \n`" . $this->escape($uniqueUsername) . "`\n\n";
                     $message .= "🌍 *موقعیت:* {$locationFlag} " . $this->escape($locationName) . "\n";
                     $message .= "📦 *حجم:* `{$volumeMB}` " . $this->escape("مگابایت") . "\n";
                     $message .= "⏳ *اعتبار:* `{$durationHours}` " . $this->escape("ساعت") . "\n\n";
-                    $message .= "🔗 *لینک کانفیگ:*\n";
+                    $message .= "🔗 *لینک اشتراک شما:*\n";
                     $message .= "`{$configLink}`\n\n";
-                    $message .= $this->escape("⚠️ روی لینک بالا کلیک کنید یا دکمه زیر را بزنید.");
+                    $message .= "👆🏻 " . $this->escape("برای کپی کردن لینک بالا کافیست روی آن بزنید!") . "\n\n";
+                    $message .= $this->escape("⚠️ از نرم‌افزارهای v2rayNG (اندروید) یا V2Box (آیفون) استفاده کنید.");
 
                     // کیبورد با دکمه کپی و QR
                     $keyboard = Keyboard::make()->inline()
                         ->row([
-                            Keyboard::inlineButton(['text' => '📋 کپی لینک', 'callback_data' => "copy_trial_link_{$user->id}"]),
+                            Keyboard::inlineButton(['text' => '📋 لینک کپی سریع', 'callback_data' => "copy_trial_link_{$user->id}"]),
                             Keyboard::inlineButton(['text' => '📱 QR Code', 'callback_data' => "qr_trial_{$user->id}"])
                         ])
                         ->row([
-                            Keyboard::inlineButton(['text' => '🛒 خرید سرویس', 'callback_data' => '/plans']),
+                            Keyboard::inlineButton(['text' => '🛒 خرید سرویس دائمی', 'callback_data' => '/plans']),
                             Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
                         ]);
 
