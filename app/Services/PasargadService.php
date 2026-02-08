@@ -254,38 +254,40 @@ class PasargadService
 
     /**
      * ساخت لینک سابسکریپشن
-     * در پاسارگاد لینک به صورت /sub/{username} است
      */
     public function generateSubscriptionLink(string $username): string
     {
         $baseUrl = $this->baseUrl;
         $nodeHostname = $this->nodeHostname ? trim($this->nodeHostname) : null;
         
-        Log::debug('Pasargad generating sub link [Ultra-Robust]', [
+        Log::debug('Pasargad generating sub link', [
             'base_url' => $baseUrl,
             'node_hostname' => $nodeHostname,
             'username' => $username
         ]);
 
-        // اگر آدرس نود (سابسکریپشن) به صورت URL کامل تنظیم شده است
-        if ($nodeHostname && str_starts_with($nodeHostname, 'http')) {
-            return rtrim($nodeHostname, '/') . "/sub/{$username}";
-        }
-
-        // تجزیه baseUrl برای استخراج پروتکل و دامنه
-        $parsed = parse_url($baseUrl);
+        // استخراج بخش دامنه از nodeHostname یا baseUrl
+        // اگر nodeHostname کامل بود (با http)، از آن استفاده می‌کنیم، وگرنه از baseUrl برای پروتکل کمک می‌گیریم
+        $targetUrl = ($nodeHostname && str_starts_with($nodeHostname, 'http')) ? $nodeHostname : $baseUrl;
+        $parsed = parse_url($targetUrl);
         $scheme = $parsed['scheme'] ?? 'https';
         
-        // اولویت با nodeHostname است، اگر نبود از hostِ baseUrl استفاده می‌کنیم
-        $host = $nodeHostname ?: ($parsed['host'] ?? '');
-        
-        // 🔥 گام نهایی برای اطمینان: حذف هرگونه پورت (مثل :8000) از رشته host
-        // این کار باعث می‌شود حتی اگر در تنظیمات پورت اشتباهی وارد شده باشد، لینک سابسکریپشن تمیز بماند
+        // اگر nodeHostname پروتکل نداشت اما مقدار داشت، از خودش استفاده کن، وگرنه از hostِ baseUrl
+        if ($nodeHostname && !str_starts_with($nodeHostname, 'http')) {
+            $host = $nodeHostname;
+        } else {
+            $host = $parsed['host'] ?? '';
+        }
+
+        // 🔥 فیلتر نهایی: حذف پورت از دامنه در هر وضعیتی
         $cleanHost = preg_replace('/:\d+/', '', $host);
         
         $finalLink = "{$scheme}://{$cleanHost}/sub/{$username}";
         
-        Log::info('Pasargad final sub link generated:', ['link' => $finalLink]);
+        Log::info('Pasargad final sub link generated:', [
+            'link' => $finalLink,
+            'input_node' => $nodeHostname
+        ]);
         
         return $finalLink;
     }
