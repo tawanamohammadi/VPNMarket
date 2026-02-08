@@ -118,13 +118,23 @@ class WebhookController extends Controller
 
     public function handle(Request $request)
     {
+        // Debug Logging
+        file_put_contents(storage_path('logs/bot_debug.log'), date('Y-m-d H:i:s') . " - Unresponsiveness Check: Webhook Received from " . $request->ip() . "\n", FILE_APPEND);
+
         Log::info("BOT_WEBHOOK_RECEIVED", ['ip' => $request->ip()]);
         try {
             $this->settings = Setting::all()->pluck('value', 'key');
             $botToken = $this->settings->get('telegram_bot_token');
+
+            // Fallback to config if DB setting is missing
+            if (!$botToken) {
+                $botToken = config('telegrambot.bot_token');
+                file_put_contents(storage_path('logs/bot_debug.log'), date('Y-m-d H:i:s') . " - Token not in DB, fell back to config: " . ($botToken ? "FOUND" : "MISSING") . "\n", FILE_APPEND);
+            }
             
             if (!$botToken) {
                 Log::warning('Telegram bot token is not set.');
+                file_put_contents(storage_path('logs/bot_debug.log'), date('Y-m-d H:i:s') . " - CRITICAL: Bot token is MISSING in both DB and Config.\n", FILE_APPEND);
                 return response('ok', 200);
             }
 
@@ -156,6 +166,7 @@ class WebhookController extends Controller
                 Log::info("UPDATE_TYPE_NOT_HANDLED", ['type' => $update->detectType()]);
             }
         } catch (\Exception $e) {
+            file_put_contents(storage_path('logs/bot_debug.log'), date('Y-m-d H:i:s') . " - EXCEPTION: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
             Log::error('Telegram Bot Error: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
@@ -2946,38 +2957,6 @@ class WebhookController extends Controller
         }
     }
 
-    /**
-     * ✅ نسخه اصلی sendReferralMenu (متد تکراری دیگری در انتهای فایل وجود داشت که حذف شد)
-     */
-    protected function sendReferralMenu($user, $messageId = null)
-    {
-        try {
-            $botInfo = Telegram::getMe();
-            $botUsername = $botInfo->getUsername();
-        } catch (\Exception $e) {
-            $this->sendOrEditMainMenu($user->telegram_chat_id, "❌ خطا در دریافت اطلاعات ربات", $messageId);
-            return;
-        }
-
-        $referralCode = $user->referral_code ?? Str::random(8);
-        if (!$user->referral_code) {
-            $user->update(['referral_code' => $referralCode]);
-        }
-
-        // ✅ اصلاح: حذف space های اضافی
-        $referralLink = "https://t.me/{$botUsername}?start={$referralCode}";
-        $referrerReward = number_format((int) $this->settings->get('referral_referrer_reward', 0));
-        $referralCount = $user->referrals()->count();
-
-        $message = "🎁 *دعوت از دوستان*\n\n";
-        $message .= "با اشتراک‌گذاری لینک زیر، دوستان خود را به ربات دعوت کنید.\n\n";
-        $message .= "💸 با هر خرید موفق دوستانتان، *{$referrerReward} تومان* به کیف پول شما اضافه می‌شود.\n\n";
-        $message .= "🔗 *لینک دعوت شما:*\n`{$referralLink}`\n\n";
-        $message .= "👥 تعداد دعوت‌های موفق شما: *{$referralCount} نفر*";
-
-        $keyboard = Keyboard::make()->inline()->row([Keyboard::inlineButton(['text' => '⬅️ بازگشت', 'callback_data' => '/start'])]);
-        $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
-    }
 
     protected function handleTrialRequest($user, $extraUsername = null)
     {
