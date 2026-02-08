@@ -536,11 +536,7 @@ class WebhookController extends Controller
             return;
         }
 
-        if (Str::startsWith($data, 'show_service_')) {
-            $orderId = Str::after($data, 'show_service_');
-            $this->showServiceDetails($user, $orderId, $messageId);
-            return;
-        }
+
 
         if (!$user) {
             Telegram::sendMessage(['chat_id' => $chatId, 'text' => $this->escape("❌ کاربر یافت نشد. لطفاً با دستور /start ربات را مجدداً راه‌اندازی کنید."), 'parse_mode' => 'MarkdownV2']);
@@ -613,6 +609,12 @@ class WebhookController extends Controller
         } elseif (Str::startsWith($data, 'pay_card_')) {
             $orderId = Str::after($data, 'pay_card_');
             $this->sendCardPaymentInfo($chatId, $orderId, $messageId);
+        }
+
+        elseif (Str::startsWith($data, 'show_service_')) {
+             $orderId = Str::after($data, 'show_service_');
+             // اگر کاربر روی سرویس کلیک کرد، مستقیماً QR را نشان بده
+             $this->showServiceDetailsWithQR($user, $orderId, $messageId);
         }
 
         elseif (Str::startsWith($data, 'copy_trial_link_')) {
@@ -1489,10 +1491,10 @@ class WebhookController extends Controller
                 ]);
 
             // ✅ ارسال عکس با InputFile (Premium Look)
-            $photoCaption = "🔑 *📱 QR Code اشتراک #{$order->id}*\n\n";
-            $photoCaption .= "👤 *نام کاربری:* `{$order->panel_username}`\n";
+            $photoCaption = "🔑 *📱 QR Code اشتراک \\#{$order->id}*\n\n";
+            $photoCaption .= "👤 *نام کاربری:* `" . $this->escapeCode($order->panel_username) . "`\n";
             $photoCaption .= "🔗 *لینک اشتراک:*\n";
-            $photoCaption .= "`{$configLink}`\n\n";
+            $photoCaption .= "`" . $this->escapeCode($configLink) . "`\n\n";
             $photoCaption .= "👆🏻 " . $this->escape("برای کپی سریع روی لینک بالا بزنید!") . "\n\n";
             $photoCaption .= $this->escape("⚠️ این کد را در اپلیکیشن خود اسکن یا لینک را وارد کنید.");
 
@@ -1522,7 +1524,7 @@ class WebhookController extends Controller
 
             Telegram::sendMessage([
                 'chat_id' => $user->telegram_chat_id,
-                'text' => $this->escape("❌ خطا در تولید QR Code.\n\n🔧 لطفاً از لینک زیر استفاده کنید:\n`{$configLink}`"),
+                'text' => $this->escape("❌ خطا در تولید QR Code.\n\n🔧 لطفاً از لینک زیر استفاده کنید:") . "\n`" . $this->escapeCode($configLink) . "`",
                 'parse_mode' => 'MarkdownV2',
                 'reply_markup' => $keyboard
             ]);
@@ -1672,6 +1674,138 @@ class WebhookController extends Controller
         ]);
 
         $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
+    }
+
+    protected function showServiceDetailsWithQR($user, $orderId, $messageId = null)
+    {
+        // 1. اگر پیام قبلی وجود دارد، آن را حذف کن (چون نمی‌توان متن را به عکس تبدیل کرد)
+        if ($messageId) {
+            try {
+                Telegram::deleteMessage([
+                    'chat_id' => $user->telegram_chat_id,
+                    'message_id' => $messageId
+                ]);
+            } catch (\Exception $e) {
+                // اگر پیام قبلاً حذف شده بود، مشکلی نیست
+            }
+        }
+
+        $order = $user->orders()->with('plan')->find($orderId);
+
+        if (!$order || !$order->plan || $order->status !== 'paid') {
+            $this->sendOrEditMainMenu($user->telegram_chat_id, "❌ سرویس مورد نظر یافت نشد یا معتبر نیست.", null);
+            return;
+        }
+
+        // اگر کانفیگ ندارد، همان متن ساده را بفرست
+        if (empty($order->config_details)) {
+             $this->showServiceDetails($user, $orderId, null);
+             return;
+        }
+
+        $configLink = trim($order->config_details);
+        $panelUsername = $order->panel_username ?: (($user->telegram_username ? "@" . $user->telegram_username : "user-" . $user->id) . "-order-" . $order->id);
+        
+        $expiresAt = Carbon::parse($order->expires_at);
+        $now = now();
+        $daysRemaining = (int) $now->diffInDays($expiresAt, false);
+        
+        if ($expiresAt->isPast()) {
+            $remainingText = "*منقضی شده*";
+            $statusIcon = '⚫️';
+        } elseif ($daysRemaining <= 7) {
+            $remainingText = "*" . $this->escape($daysRemaining . ' روز') . "* باقی‌مانده (تمدید کنید)";
+            $statusIcon = '🟡';
+        } else {
+            $remainingText = "*" . $this->escape($daysRemaining . ' روز') . "* باقی‌مانده";
+            $statusIcon = '🟢';
+        }
+
+        $locationFlag = '🏳️';
+        $locationName = 'نامشخص';
+        $panelType = $this->settings->get('panel_type');
+        if ($order->plan && ($panelType === 'pasargad' || !$panelType)) {
+             $locationFlag = '🦅';
+             $locationName = 'سرویس Eagle';
+        }
+
+        // متن کپشن (مشابه showServiceDetails)
+        $caption = "🔍 *جزئیات اشتراک \\#{$order->id}*\n";
+        $caption .= "━━━━━━━━━━━━━━━\n\n";
+        $caption .= "💎 *سرویس:* " . $this->escape($order->plan->name) . "\n";
+        $caption .= "🌍 *موقعیت:* {$locationFlag} " . $this->escape($locationName) . "\n";
+        $caption .= "👤 *نام کاربری:* `" . $this->escapeCode($panelUsername) . "`\n";
+        $caption .= "🗓 *انقضا:* " . $this->escape($expiresAt->format('Y/m/d')) . "\n";
+        $caption .= "⏱ *وضعیت:* " . $remainingText . "\n";
+        $caption .= "📦 *حجم کل:* " . $this->escape($order->plan->volume_gb . ' گیگابایت') . "\n\n";
+        
+        $caption .= "🔗 *لینک اشتراک اختصاصی:*\n";
+        $caption .= "`" . $this->escapeCode($configLink) . "`\n\n";
+        $caption .= "👆🏻 " . $this->escape("برای کپی سریع روی لینک بالا بزنید!") . "\n";
+
+        // کیبورد
+        $keyboard = Keyboard::make()->inline();
+        $keyboard->row([
+            Keyboard::inlineButton(['text' => "📋 کپی لینک", 'callback_data' => "copy_link_{$order->id}"]),
+            Keyboard::inlineButton(['text' => "🔄 تمدید اشتراک", 'callback_data' => "renew_order_{$order->id}"])
+        ]);
+        $keyboard->row([
+            Keyboard::inlineButton(['text' => '⬅️ بازگشت به لیست سرویس‌ها', 'callback_data' => '/my_services']),
+            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+        ]);
+
+        // تولید و ارسال QR
+        $tempFile = null;
+        try {
+            $qrParams = [
+                'size' => '400x400',
+                'data' => $configLink,
+                'ecc' => 'M',
+                'margin' => 10,
+                'color' => '000000',
+                'bgcolor' => 'FFFFFF',
+                'format' => 'png'
+            ];
+            $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?" . http_build_query($qrParams);
+            
+            // دانلود فایل با چک کردن HTTP Code
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $qrUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 30, // افزایش تایم‌اوت
+                CURLOPT_CONNECTTIMEOUT => 10
+            ]);
+            $qrData = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200 || empty($qrData)) {
+                throw new \Exception("QR Service Failed with HTTP Code: $httpCode");
+            }
+
+            $tempDir = storage_path('app/temp');
+            if (!is_dir($tempDir)) mkdir($tempDir, 0755, true);
+            $tempFile = $tempDir . '/qr_auto_' . $order->id . '_' . time() . '.png';
+            if (file_put_contents($tempFile, $qrData) === false) {
+                 throw new \Exception("Could not write temp file");
+            }
+
+            Telegram::sendPhoto([
+                'chat_id' => $user->telegram_chat_id,
+                'photo' => InputFile::create($tempFile, "qr_{$order->id}.png"),
+                'caption' => $caption,
+                'parse_mode' => 'MarkdownV2',
+                'reply_markup' => $keyboard
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("QR Auto-Send Failed: " . $e->getMessage());
+            // فال‌بک به متن معمولی
+            $this->showServiceDetails($user, $orderId, null); // null messageId to force new message
+        } finally {
+            if ($tempFile && file_exists($tempFile)) @unlink($tempFile);
+        }
     }
 
     protected function sendWalletMenu($user, $messageId = null)
