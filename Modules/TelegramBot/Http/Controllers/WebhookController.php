@@ -1539,13 +1539,8 @@ class WebhookController extends Controller
     }
     protected function sendMyServices($user, $messageId = null)
     {
-        $orders = $user->orders()->with('plan')
-            ->where('status', 'paid')
-            ->whereNotNull('plan_id')
-            ->whereNull('renews_order_id')
-            ->where('expires_at', '>', now()->subDays(30))
-            ->orderBy('expires_at', 'desc')
-            ->get();
+        $orders = $user->orders()->where('status', 'paid')->get();
+        Log::info("Simplified Query Found: " . $orders->count());
 
         $allPaid = $user->orders()->where('status', 'paid')->count();
         $withPlan = $user->orders()->where('status', 'paid')->whereNotNull('plan_id')->count();
