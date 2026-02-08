@@ -393,10 +393,11 @@ class WebhookController extends Controller
         $user->update(['bot_state' => $newState]);
 
         $keyboard = Keyboard::make()->inline()->row([Keyboard::inlineButton(['text' => '❌ انصراف', 'callback_data' => '/cancel_action'])]);
+        
         $message = "👤 *انتخاب نام کاربری سرویس*\n\n";
-        $message .= "لطفاً یک نام کاربری انگلیسی برای سرویس خود وارد کنید.\n";
-        $message .= "🔹 فقط حروف انگلیسی و اعداد مجاز است (حداقل ۳ حرف).\n";
-        $message .= "🔹 مثال: `arvin123` یا `myvpn`";
+        $message .= $this->escape("لطفاً یک نام کاربری انگلیسی برای سرویس خود وارد کنید.") . "\n";
+        $message .= $this->escape("🔹 فقط حروف انگلیسی و اعداد مجاز است (حداقل ۳ حرف).") . "\n";
+        $message .= $this->escape("🔹 مثال:") . " `arvin123` " . $this->escape("یا") . " `myvpn`";
 
         $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
     }
@@ -1546,9 +1547,12 @@ class WebhookController extends Controller
             ->orderBy('expires_at', 'desc')
             ->get();
 
-        $debugTotal = $user->orders()->count();
-        $debugPaid = $user->orders()->where('status', 'paid')->count();
-        Log::info("Checking services for user {$user->id}. Found: " . $orders->count() . " (Total in DB: {$debugTotal}, Paid in DB: {$debugPaid})");
+        $allPaid = $user->orders()->where('status', 'paid')->count();
+        $withPlan = $user->orders()->where('status', 'paid')->whereNotNull('plan_id')->count();
+        $notRenewals = $user->orders()->where('status', 'paid')->whereNotNull('plan_id')->whereNull('renews_order_id')->count();
+        $notExpired = $user->orders()->where('status', 'paid')->whereNotNull('plan_id')->whereNull('renews_order_id')->where('expires_at', '>', now()->subDays(30))->count();
+
+        Log::info("DEBUG SERVICES for User {$user->id}: All Paid: $allPaid, With Plan: $withPlan, Not Renewals: $notRenewals, Not Expired (Final): $notExpired");
 
         if ($orders->isEmpty()) {
             $keyboard = Keyboard::make()->inline()->row([
