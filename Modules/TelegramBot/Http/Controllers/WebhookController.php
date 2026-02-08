@@ -1265,9 +1265,10 @@ class WebhookController extends Controller
 
             $durations = $activePlans->pluck('duration_days')->unique()->sort();
 
-            $message = "🚀 *انتخاب سرویس VPN*\n\n";
+            $message = "🛒 *انتخاب سرویس VPN*\n";
+            $message .= "━━━━━━━━━━━━━━━\n\n";
             $message .= "لطفاً مدت‌زمان سرویس مورد نظر را انتخاب کنید:\n\n";
-            $message .= "👇 یکی از گزینه‌های زیر را بزنید:";
+            $message .= "👇 یکی از گزینه‌های زیر را انتخاب کنید:";
 
             $keyboard = Keyboard::make()->inline();
 
@@ -1303,15 +1304,15 @@ class WebhookController extends Controller
         if ($days % 30 === 0) {
             $months = $days / 30;
             return match ($months) {
-                1 => '🔸 یک ماهه',
-                2 => '🔸 دو ماهه',
-                3 => '🔸 سه ماهه',
-                6 => '🔸 شش ماهه',
-                12 => '🔸 یک ساله',
-                default => "{$months} ماهه",
+                1 => '📅 یک ماهه',
+                2 => '📅 دو ماهه',
+                3 => '📅 سه ماهه',
+                6 => '📅 شش ماهه',
+                12 => '📅 یک ساله',
+                default => "📅 {$months} ماهه",
             };
         }
-        return "{$days} روزه";
+        return "📅 {$days} روزه";
     }
 
     protected function sendPlansByDuration($chatId, $durationDays, $messageId = null)
@@ -1329,18 +1330,17 @@ class WebhookController extends Controller
                 return;
             }
 
-            $durationLabel = $plans->first()->duration_label;
-            $message = "📅 *پلن‌های {$durationLabel}*\n\n";
+            $durationLabel = $plans->first()->duration_label ?? "{$durationDays} روزه";
+            $message = "💎 *سرویس‌های {$durationLabel}*\n";
+            $message .= "━━━━━━━━━━━━━━━\n\n";
 
             foreach ($plans as $index => $plan) {
-                if ($index > 0) {
-                    $message .= "〰️〰️〰️\n\n";
-                }
-                $message .= ($index + 1) . ". 💎 *" . $this->escape($plan->name) . "*\n";
-                $message .= "   📦 " . $this->escape($plan->volume_gb . ' گیگ') . "\n";
+                $statusIcon = '✅';
+                $message .= "{$statusIcon} *" . $this->escape($plan->name) . "*\n";
+                $message .= "   📦 " . $this->escape($plan->volume_gb . ' گیگابایت') . "\n";
                 $message .= "   💳 " . $this->escape(number_format($plan->price) . ' تومان') . "\n";
+                $message .= "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
             }
-
             $message .= "\n👇 پلن مورد نظر را انتخاب کنید:";
 
             $keyboard = Keyboard::make()->inline();
@@ -1356,7 +1356,10 @@ class WebhookController extends Controller
                 ]);
             }
 
-            $keyboard->row([Keyboard::inlineButton(['text' => '⬅️ بازگشت به انتخاب زمان', 'callback_data' => '/plans'])]);
+            $keyboard->row([
+                Keyboard::inlineButton(['text' => '⬅️ بازگشت', 'callback_data' => '/plans']),
+                Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+            ]);
 
             $this->sendOrEditMessage($chatId, $message, $keyboard, $messageId);
 
@@ -1534,7 +1537,9 @@ class WebhookController extends Controller
             return;
         }
 
-        $message = "🛠 *سرویس‌های شما*\n\nلطفاً یک سرویس را برای مشاهده جزئیات انتخاب کنید:";
+        $message = "🛠 *سرویس‌های شما*\n";
+        $message .= "━━━━━━━━━━━━━━━\n\n";
+        $message .= "لطفاً یک سرویس را برای مشاهده جزئیات انتخاب کنید:";
 
         $keyboard = Keyboard::make()->inline();
 
@@ -1564,7 +1569,10 @@ class WebhookController extends Controller
             ]);
         }
 
-        $keyboard->row([Keyboard::inlineButton(['text' => '⬅️ بازگشت به منوی اصلی', 'callback_data' => '/start'])]);
+        $keyboard->row([
+            Keyboard::inlineButton(['text' => '🛒 خرید سرویس جدید', 'callback_data' => '/plans']),
+            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+        ]);
 
         $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
     }
@@ -1648,25 +1656,21 @@ class WebhookController extends Controller
     protected function sendWalletMenu($user, $messageId = null)
     {
         $balance = number_format($user->balance ?? 0);
-        $message = "💰 *کیف پول شما*\n\n";
-        $message .= "موجودی فعلی: *{$balance} تومان*\n\n";
+        $message = "💰 *کیف پول شما*\n";
+        $message .= "━━━━━━━━━━━━━━━\n\n";
+        $message .= "💵 موجودی فعلی: *{$balance} تومان*\n\n";
         $message .= "می‌توانید حساب خود را شارژ کنید یا تاریخچه تراکنش‌ها را مشاهده نمایید:";
 
         $keyboard = Keyboard::make()->inline()
             ->row([
                 Keyboard::inlineButton(['text' => '💳 شارژ حساب', 'callback_data' => '/deposit']),
-                Keyboard::inlineButton(['text' => '📜 تاریخچه تراکنش‌ها', 'callback_data' => '/transactions']),
+                Keyboard::inlineButton(['text' => '📜 تراکنش‌ها', 'callback_data' => '/transactions']),
             ])
-            ->row([Keyboard::inlineButton(['text' => '⬅️ بازگشت به منوی اصلی', 'callback_data' => '/start'])]);
+            ->row([Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])]);
 
         $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
     }
 
-    /**
-     * ✅ حذف: این متد دقیقاً در انتهای فایل تکراری بود و حذف شده است.
-     * نسخه اصلی در انتهای فایل نگه داشته شد.
-     */
-    /*
     protected function sendReferralMenu($user, $messageId = null)
     {
         try {
@@ -1683,27 +1687,30 @@ class WebhookController extends Controller
             $user->update(['referral_code' => $referralCode]);
         }
 
-        // ✅ اصلاح: حذف space های اضافی
         $referralLink = "https://t.me/{$botUsername}?start={$referralCode}";
         $referrerReward = number_format((int) $this->settings->get('referral_referrer_reward', 0));
         $referralCount = $user->referrals()->count();
 
-        $message = "🎁 *دعوت از دوستان*\n\n";
-        $message .= "با اشتراک‌گذاری لینک زیر، دوستان خود را به ربات دعوت کنید.\n\n";
+        $message = "🎁 *دعوت از دوستان*\n";
+        $message .= "━━━━━━━━━━━━━━━\n\n";
+        $message .= "با اشتراک‌گذاری لینک زیر، دوستان خود را به ربات دعوت کنید و هدیه بگیرید!\n\n";
         $message .= "💸 با هر خرید موفق دوستانتان، *{$referrerReward} تومان* به کیف پول شما اضافه می‌شود.\n\n";
-        $message .= "🔗 *لینک دعوت شما:*\n`{$referralLink}`\n\n";
-        $message .= "👥 تعداد دعوت‌های موفق شما: *{$referralCount} نفر*";
+        $message .= "🔗 *لینک دعوت شما (برای کپی لمس کنید):*\n`{$referralLink}`\n\n";
+        $message .= "👥 دعوت‌های موفق شما: *{$referralCount} نفر*";
 
-        $keyboard = Keyboard::make()->inline()->row([Keyboard::inlineButton(['text' => '⬅️ بازگشت به منوی اصلی', 'callback_data' => '/start'])]);
+        $keyboard = Keyboard::make()->inline()->row([
+            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+        ]);
         $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
     }
-    */
+
 
     protected function sendTransactions($user, $messageId = null)
     {
         $transactions = $user->transactions()->with('order.plan')->latest()->take(10)->get();
 
-        $message = "📜 *۱۰ تراکنش اخیر شما*\n\n";
+        $message = "📜 *۱۰ تراکنش اخیر شما*\n";
+        $message .= "━━━━━━━━━━━━━━━\n\n";
 
         if ($transactions->isEmpty()) {
             $message .= $this->escape("شما تاکنون هیچ تراکنشی ثبت نکرده‌اید.");
@@ -1738,10 +1745,10 @@ class WebhookController extends Controller
                 $message .= "{$status} *" . $this->escape($type) . "*\n";
                 $message .= "   💸 *مبلغ:* " . $this->escape($amount . " تومان") . "\n";
                 $message .= "   📅 *تاریخ:* " . $this->escape($date) . "\n";
-                if ($transaction->order?->plan) {
+                if ($transaction->order && $transaction->order->plan) {
                     $message .= "   🏷 *پلن:* " . $this->escape($transaction->order->plan->name) . "\n";
                 }
-                $message .= "〰️〰️〰️〰️〰️〰️\n";
+                $message .= "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
             }
         }
 
@@ -1754,15 +1761,17 @@ class WebhookController extends Controller
 
     protected function sendTutorialsMenu($chatId, $messageId = null)
     {
-        $message = "📚 *راهنمای اتصال*\n\nلطفاً سیستم‌عامل خود را برای دریافت راهنما و لینک دانلود انتخاب کنید:";
+        $message = "📚 *راهنمای اتصال*\n";
+        $message .= "━━━━━━━━━━━━━━━\n\n";
+        $message .= "لطفاً سیستم‌عامل خود را برای دریافت راهنما انتخاب کنید:";
         $keyboard = Keyboard::make()->inline()
             ->row([
-                Keyboard::inlineButton(['text' => '📱 اندروید (V2rayNG)', 'callback_data' => '/tutorial_android']),
-                Keyboard::inlineButton(['text' => '🍏 آیفون (V2Box)', 'callback_data' => '/tutorial_ios']),
+                Keyboard::inlineButton(['text' => '📱 اندروید', 'callback_data' => '/tutorial_android']),
+                Keyboard::inlineButton(['text' => '🍏 آیفون', 'callback_data' => '/tutorial_ios']),
             ])
             ->row([
-                Keyboard::inlineButton(['text' => '💻 ویندوز (V2rayN)', 'callback_data' => '/tutorial_windows']),
-                Keyboard::inlineButton(['text' => '⬅️ بازگشت به منوی اصلی', 'callback_data' => '/start']),
+                Keyboard::inlineButton(['text' => '💻 ویندوز', 'callback_data' => '/tutorial_windows']),
+                Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start']),
             ]);
         $this->sendOrEditMessage($chatId, $message, $keyboard, $messageId);
     }
@@ -2580,12 +2589,13 @@ class WebhookController extends Controller
     }
     protected function showSupportMenu($user, $messageId = null)
     {
-        $tickets = $user->tickets()->latest()->take(4)->get();
-        $message = "💬 *پشتیبانی*\n\n";
+        $tickets = $user->tickets()->latest()->take(5)->get();
+        $message = "💬 *مرکز پشتیبانی*\n";
+        $message .= "━━━━━━━━━━━━━━━\n\n";
         if ($tickets->isEmpty()) {
             $message .= "شما تاکنون هیچ تیکتی ثبت نکرده‌اید.";
         } else {
-            $message .= "لیست آخرین تیکت‌های شما:\n";
+            $message .= "لیست تیکت‌های اخیر شما:\n";
             foreach ($tickets as $ticket) {
                 $status = match ($ticket->status) {
                     'open' => '🔵 باز',
