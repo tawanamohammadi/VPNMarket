@@ -109,7 +109,7 @@ class RemnawaveService
             $subscriptionUrl = $this->nodeHostname . $subscriptionUrl;
         }
 
-        return "لینک سابسکریپشن شما (در تمام برنامه‌ها import کنید):\n" . $subscriptionUrl;
+        return $subscriptionUrl;
     }
 
     public function resetTraffic(string $identifier): ?array

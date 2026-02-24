@@ -100,6 +100,6 @@ class MarzbanService
     {
         $subscriptionUrl = $userApiResponse['subscription_url'];
 
-        return "لینک سابسکریپشن شما (در تمام برنامه‌ها import کنید):\n" . $this->nodeHostname . $subscriptionUrl;
+        return $this->nodeHostname . $subscriptionUrl;
     }
 }
