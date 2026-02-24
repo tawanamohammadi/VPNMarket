@@ -2944,7 +2944,7 @@ class WebhookController extends Controller
 
                 $user->update(['bot_state' => null]);
                 Telegram::sendMessage(['chat_id' => $chatId, 'text' => $this->escape("✅ تیکت #{$ticket->id} با موفقیت ثبت شد."), 'parse_mode' => 'MarkdownV2']);
-                $this->sendOrEditMainMenu($chatId, "پشتیبانی به زودی پاسخ شما را خواهد داد.");
+                $this->sendOrEditMainMenu($chatId, "پشتیبانی به زودی پاسخ شما را خواهد داد\.");
 
                 event(new TicketCreated($ticket));
 
@@ -2975,7 +2975,7 @@ class WebhookController extends Controller
 
                 $user->update(['bot_state' => null]);
                 Telegram::sendMessage(['chat_id' => $chatId, 'text' => $this->escape("✅ پاسخ شما برای تیکت #{$ticketId} ثبت شد."), 'parse_mode' => 'MarkdownV2']);
-                $this->sendOrEditMainMenu($chatId, "پشتیبانی به زودی پاسخ شما را خواهد داد.");
+                $this->sendOrEditMainMenu($chatId, "پشتیبانی به زودی پاسخ شما را خواهد داد\.");
 
                 event(new TicketReplied($reply));
             }

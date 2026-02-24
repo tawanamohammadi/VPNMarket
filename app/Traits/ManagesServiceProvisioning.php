@@ -96,7 +96,10 @@ trait ManagesServiceProvisioning
 
                 $response = $isRenewal
                     ? $remnawaveService->updateUser($uniqueUsername, $userData)
-                    : $remnawaveService->createUser(array_merge($userData, ['username' => $uniqueUsername]));
+                    : $remnawaveService->createUser(array_merge($userData, [
+                        'username' => $uniqueUsername,
+                        'squad_uuid' => $settings->get('remnawave_squad_uuid'),
+                    ]));
 
                 if ($response && (isset($response['subscriptionUrl']) || isset($response['username']))) {
                     $finalConfig = $remnawaveService->generateSubscriptionLink($response);

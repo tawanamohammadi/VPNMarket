@@ -174,7 +174,10 @@ class OrderResource extends Resource
                                         $response = $remnawaveService->updateUser($uniqueUsername, $userData);
                                         $remnawaveService->resetTraffic($uniqueUsername);
                                     } else {
-                                        $response = $remnawaveService->createUser(array_merge($userData, ['username' => $uniqueUsername]));
+                                        $response = $remnawaveService->createUser(array_merge($userData, [
+                                            'username' => $uniqueUsername,
+                                            'squad_uuid' => $settings->get('remnawave_squad_uuid'),
+                                        ]));
                                     }
 
                                     if ($response && (isset($response['subscriptionUrl']) || isset($response['username']))) {

@@ -4,21 +4,23 @@ client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect('167.172.102.14', username='root', password='Aa32283228@Aa')
 
-# Get a specific range from the response file
-stdin, stdout, stderr = client.exec_command("sed -n '1,50p' /tmp/webhook_response.html | grep -v '^$' | head -30")
-print("First 30 non-empty lines:", stdout.read().decode('utf-8', 'replace'))
+# Get DB password
+stdin, stdout, stderr = client.exec_command("grep DB_PASSWORD /var/www/vpnmarket/.env | cut -d= -f2")
+db_pass = stdout.read().decode().strip()
 
-# Try to find any text that looks like an error
-stdin2, stdout2, stderr2 = client.exec_command("""grep -i 'error\|exception\|class not found\|undefined\|fatal' /tmp/webhook_response.html | grep -v 'javascript\|css\|<script\|function\|var ' | head -10""")
-print("Error lines:", stdout2.read().decode('utf-8', 'replace'))
+# Update the squad UUID in the database
+cmd = f"mysql -utawana -p{db_pass} tawana -e \"INSERT INTO settings (\\`key\\`, value, created_at, updated_at) VALUES ('remnawave_squad_uuid', 'd6dfba60-6644-4470-a18f-b1fb89126495', NOW(), NOW()) ON DUPLICATE KEY UPDATE value='d6dfba60-6644-4470-a18f-b1fb89126495', updated_at=NOW();\" 2>&1"
+stdin2, stdout2, stderr2 = client.exec_command(cmd)
+result = stdout2.read().decode('utf-8', 'replace')
+print('DB Update:', result if result else 'OK ✅')
 
-# Check if the response may not be from Ignition (maybe it's the SPA)
-# Look for React/Vue/Inertia indicators
-stdin3, stdout3, stderr3 = client.exec_command("""grep -o 'Inertia\|__Inertia\|inertia\|<div id="app"' /tmp/webhook_response.html | head -5""")
-print("Framework indicators:", stdout3.read().decode('utf-8', 'replace'))
+# Verify it was saved
+cmd2 = f"mysql -utawana -p{db_pass} tawana -e \"SELECT * FROM settings WHERE \\`key\\` = 'remnawave_squad_uuid';\" 2>/dev/null"
+stdin3, stdout3, stderr3 = client.exec_command(cmd2)
+print('Saved value:', stdout3.read().decode('utf-8', 'replace'))
 
-# Look for the data payload in the SPA
-stdin4, stdout4, stderr4 = client.exec_command("""grep -o 'data-page="[^"]*"' /tmp/webhook_response.html | head -c 500""")
-print("Inertia data-page:", stdout4.read().decode('utf-8', 'replace'))
+# Clear cache
+stdin4, stdout4, stderr4 = client.exec_command("cd /var/www/vpnmarket && php artisan cache:clear 2>&1 | tail -2")
+print('Cache clear:', stdout4.read().decode('utf-8', 'replace'))
 
 client.close()
