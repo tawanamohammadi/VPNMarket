@@ -1888,17 +1888,19 @@ class WebhookController extends Controller
         $referrerReward = number_format((int) $this->settings->get('referral_referrer_reward', 0));
         $referralCount = $user->referrals()->count();
 
-        $message = "🎁 *دعوت از دوستان*\n";
-        $message .= "━━━━━━━━━━━━━━━\n\n";
-        $message .= $this->escape("با اشتراک‌گذاری لینک زیر، دوستان خود را به ربات دعوت کنید و هدیه بگیرید!") . "\n\n";
+        $message = "🤝 *طرح دعوت از دوستان*\n";
+        $message .= "〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n\n";
+        $message .= "🎯 *یک بازی برد - برد!*\n";
+        $message .= $this->escape("لینک زیر را برای دوستان خود بفرستید. با هر خریدی که آنها انجام دهند، پاداش نقدی مستقیماً به کیف پول شما واریز می‌شود.") . "\n\n";
         
-        $rewardText = "💸 " . $this->escape("با هر خرید موفق دوستانتان، ") . "*" . $this->escape($referrerReward . " تومان") . "*" . $this->escape(" به کیف پول شما اضافه می‌شود.") . "\n\n";
-        $message .= $rewardText;
+        $message .= "🎁 *ارزش پاداش هر دعوت موفق:*\n";
+        $message .= "▫️ `" . $this->escape($referrerReward) . "` *" . $this->escape("تومان") . "*\n\n";
         
-        $message .= "🔗 " . $this->escape("لینک دعوت شما (برای کپی لمس کنید):") . "\n";
-        $message .= "`" . $this->escapeCode($referralLink) . "`\n\n";
-        
-        $message .= "👥 " . $this->escape("دعوت‌های موفق شما:") . " *" . $this->escape($referralCount . " نفر") . "*";
+        $message .= "👥 *افراد دعوت شده توسط شما:*\n";
+        $message .= "▫️ `" . $this->escape($referralCount) . "` *" . $this->escape("نفر") . "*\n\n";
+
+        $message .= "🔗 *لینک دعوت اختصاصی شما (کلیک کنید):*\n";
+        $message .= "`" . $this->escapeCode($referralLink) . "`\n";
 
         $keyboard = Keyboard::make()->inline()->row([
             Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
@@ -1911,8 +1913,8 @@ class WebhookController extends Controller
     {
         $transactions = $user->transactions()->with('order.plan')->latest()->take(10)->get();
 
-        $message = "📜 *۱۰ تراکنش اخیر شما*\n";
-        $message .= "━━━━━━━━━━━━━━━\n\n";
+        $message = "🧾 *تاریخچه تراکنش‌های شما*\n";
+        $message .= "〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n\n";
 
         if ($transactions->isEmpty()) {
             $message .= $this->escape("شما تاکنون هیچ تراکنشی ثبت نکرده‌اید.");
@@ -1920,18 +1922,18 @@ class WebhookController extends Controller
             foreach ($transactions as $transaction) {
                 $type = 'نامشخص';
                 switch ($transaction->type) {
-                    case 'deposit': $type = '💰 شارژ کیف پول'; break;
+                    case 'deposit': $type = 'شارژ کیف پول'; break;
                     case 'purchase':
                         if ($transaction->order?->renews_order_id) {
-                            $type = '🔄 تمدید سرویس';
+                            $type = 'تمدید سرویس';
                         } else {
-                            $type = '🛒 خرید سرویس';
+                            $type = 'خرید سرویس';
                         }
                         break;
-                    case 'referral_reward': $type = '🎁 پاداش دعوت'; break;
-                    case 'withdraw': $type = '📤 برداشت وجه'; break;
-                    case 'refund': $type = '↩️ بازگشت وجه'; break;
-                    case 'manual adjustment': $type = '✏️ اصلاح دستی'; break;
+                    case 'referral_reward': $type = 'پاداش دعوت'; break;
+                    case 'withdraw': $type = 'برداشت وجه'; break;
+                    case 'refund': $type = 'بازگشت وجه'; break;
+                    case 'manual adjustment': $type = 'اصلاح دستی'; break;
                 }
 
                 $status = '⚪️';
@@ -1945,12 +1947,12 @@ class WebhookController extends Controller
                 $date = Carbon::parse($transaction->created_at)->format('Y/m/d');
 
                 $message .= "{$status} *" . $this->escape($type) . "*\n";
-                $message .= "   💸 *مبلغ:* " . $this->escape($amount . " تومان") . "\n";
-                $message .= "   📅 *تاریخ:* " . $this->escape($date) . "\n";
+                $message .= "   💸 *مبلغ:* `" . $this->escape($amount) . "` *" . $this->escape("تومان") . "*\n";
+                $message .= "   📅 *تاریخ:* `" . $this->escape($date) . "`\n";
                 if ($transaction->order && $transaction->order->plan) {
-                    $message .= "   🏷 *پلن:* " . $this->escape($transaction->order->plan->name) . "\n";
+                    $message .= "   🏷 *سرویس:* " . $this->escape($transaction->order->plan->name) . "\n";
                 }
-                $message .= "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
+                $message .= "〰️〰️〰️〰️〰️〰️〰️\n";
             }
         }
 
