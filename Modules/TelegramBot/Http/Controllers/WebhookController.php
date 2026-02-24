@@ -317,11 +317,14 @@ class WebhookController extends Controller
             $this->handleTrialRequest($user, $telegramUsername);
         } elseif ($text === '/start') {
             Log::info("HTM_HANDLING_START_COMMAND");
-            $telegramSettings = TelegramBotSetting::pluck('value', 'key');
-            $startMessage = $telegramSettings->get('start_message', 'سلام مجدد! لطفاً یک گزینه را انتخاب کنید:');
+
+            $premiumStartMessage = "☁️ *به شبکه ابری پنبه‌نت خوش‌آمدید!*\n\n";
+            $premiumStartMessage .= $this->escape("دسترسی آزاد، امن و بدون مرز به اینترنت حق شماست. تیم مهندسی ما با بهره‌گیری از پایدارترین زیرساخت‌ها، اینجاست تا محدودیت‌ها را بی‌معنی کند.") . "\n\n";
+            $premiumStartMessage .= "👇 " . $this->escape("لطفاً از طریق منوی زیر، داشبورد اختصاصی خود را مدیریت کنید:");
+
             Telegram::sendMessage([
                 'chat_id' => $chatId,
-                'text' => $this->escape($startMessage),
+                'text' => $premiumStartMessage,
                 'parse_mode' => 'MarkdownV2',
                 'reply_markup' => $this->getReplyMainMenu()
             ]);
@@ -396,10 +399,13 @@ class WebhookController extends Controller
 
         $keyboard = Keyboard::make()->inline()->row([Keyboard::inlineButton(['text' => '❌ انصراف', 'callback_data' => '/cancel_action'])]);
         
-        $message = "👤 *انتخاب نام کاربری سرویس*\n\n";
-        $message .= $this->escape("لطفاً یک نام کاربری انگلیسی برای سرویس خود وارد کنید.") . "\n";
-        $message .= $this->escape("🔹 فقط حروف انگلیسی و اعداد مجاز است (حداقل ۳ حرف).") . "\n";
-        $message .= $this->escape("🔹 مثال:") . " `arvin123` " . $this->escape("یا") . " `myvpn`";
+        $message = "👤 *شناسه اختصاصی شما*\n\n";
+        $message .= $this->escape("برای پردازش اتصال شما به سرویس‌دهنده‌های پنبه‌نت، یک نام کاربری (شناسه) منحصربه‌فرد برای خود انتخاب کنید. این نام نشان‌دهنده هویت شما در شبکه است.") . "\n\n";
+        $message .= "⚖️ *" . $this->escape("قوانین ثبت شناسه:") . "*\n";
+        $message .= "▫️ " . $this->escape("مجاز به استفاده از حروف انگلیسی و اعداد.") . "\n";
+        $message .= "▫️ " . $this->escape("حداقل شامل ۳ کاراکتر باشد.") . "\n\n";
+        $message .= "💡 *" . $this->escape("نمونه‌های پیشنهادی:") . "* `panbeh123` " . $this->escape("یا") . " `irangozar`\n\n";
+        $message .= "✏️ *" . $this->escape("لطفاً هم‌اکنون شناسه مدنظر خود را تایپ و ارسال کنید:") . "*";
 
         $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
     }
@@ -2877,12 +2883,13 @@ class WebhookController extends Controller
     protected function showSupportMenu($user, $messageId = null)
     {
         $tickets = $user->tickets()->latest()->take(5)->get();
-        $message = "💬 *مرکز پشتیبانی*\n";
+        $message = "👨🏻‍💻 *مرکز پشتیبانی VIP پنبه‌نت*\n";
         $message .= "━━━━━━━━━━━━━━━\n\n";
+        $message .= $this->escape("تیم متخصصین فنی ما آماده پاسخگویی و رفع سریع چالش‌های شما هستند. تعهد ما قطعی صفر و لبخند شماست.") . "\n\n";
         if ($tickets->isEmpty()) {
-            $message .= $this->escape("شما تاکنون هیچ تیکتی ثبت نکرده‌اید.");
+            $message .= "🍃 " . $this->escape("در حال حاضر هیچ مکاتبه‌ای (تیکت) از سوی شما در سیستم ثبت نشده است.");
         } else {
-            $message .= $this->escape("لیست تیکت‌های اخیر شما:") . "\n";
+            $message .= "📂 *" . $this->escape("سوابق مکاتبات شما با کارشناسان:") . "*\n";
             foreach ($tickets as $ticket) {
                 $status = match ($ticket->status) {
                     'open' => '🔵 باز',
@@ -2914,7 +2921,7 @@ class WebhookController extends Controller
     {
         $user->update(['bot_state' => 'awaiting_new_ticket_subject']);
         $keyboard = Keyboard::make()->inline()->row([Keyboard::inlineButton(['text' => '❌ انصراف', 'callback_data' => '/cancel_action'])]);
-        $this->sendOrEditMessage($user->telegram_chat_id, "📝 لطفاً *موضوع* تیکت جدید را در یک پیام ارسال کنید:", $keyboard, $messageId);
+        $this->sendOrEditMessage($user->telegram_chat_id, "📝 *" . $this->escape("لطفاً در یک پیام کوتاه، موضوع درخواست یا مشکل خود را مطرح کنید (مثال: تنظیمات آیفون):") . "*", $keyboard, $messageId);
     }
 
     protected function promptForTicketReply($user, $ticketId, $messageId)
@@ -2922,7 +2929,7 @@ class WebhookController extends Controller
         $ticketIdEscaped = $this->escape($ticketId);
         $user->update(['bot_state' => 'awaiting_ticket_reply|' . $ticketId]);
         $keyboard = Keyboard::make()->inline()->row([Keyboard::inlineButton(['text' => '❌ انصراف', 'callback_data' => '/cancel_action'])]);
-        $this->sendOrEditMessage($user->telegram_chat_id, "✏️ لطفاً پاسخ خود را برای تیکت \\#{$ticketIdEscaped} وارد کنید (می‌توانید عکس هم ارسال کنید):", $keyboard, $messageId);
+        $this->sendOrEditMessage($user->telegram_chat_id, "✏️ *" . $this->escape("کارشناس ما منتظر پاسخ است. لطفاً ادامه پیام خود را برای این تیکت بنویسید (ارسال اسکرین‌شات از مشکل هم مجاز است):") . "*", $keyboard, $messageId);
     }
 
     protected function closeTicket($user, $ticketId, $messageId, $callbackQueryId)
