@@ -47,6 +47,14 @@ class RemnawaveService
                 'status' => 'ACTIVE'
             ];
 
+            // اگر squad/inbound UUID تعریف شده، اضافه کن
+            if (!empty($userData['active_user_inbounds'])) {
+                $payload['activeUserInbounds'] = $userData['active_user_inbounds'];
+            } elseif (!empty($userData['squad_uuid'])) {
+                // فرمت جایگزین برای برخی نسخه‌های Remnawave
+                $payload['squadUuid'] = $userData['squad_uuid'];
+            }
+
             $response = Http::withToken($this->accessToken)
                 ->withHeaders(['Accept' => 'application/json'])
                 ->post($this->baseUrl . '/api/users', $payload);

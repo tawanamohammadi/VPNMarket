@@ -58,6 +58,7 @@ class ThemeSettings extends Page implements HasForms
             'marzban_sudo_password' => null,
             'remnawave_host' => null,
             'remnawave_api_token' => null,
+            'remnawave_squad_uuid' => null,
             'remnawave_node_hostname' => null,
         ], $settings));
     }
@@ -311,6 +312,7 @@ class ThemeSettings extends Page implements HasForms
                                 ->schema([
                                     TextInput::make('remnawave_host')->label('آدرس پنل Remnawave (مثال: https://panel.example.com)')->required(),
                                     TextInput::make('remnawave_api_token')->label('API Token (از داشبورد Remnawave بسازید)')->password()->required(),
+                                    TextInput::make('remnawave_squad_uuid')->label('Squad UUID (یو آیدی پیشفرض برای اتصال کاربران - اختیاری)'),
                                     TextInput::make('remnawave_node_hostname')->label('آدرس سابسکریپشن (مثال: https://sub.example.com)')->required(),
 
                                 ]),

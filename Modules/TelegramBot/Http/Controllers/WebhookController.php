@@ -2116,6 +2116,7 @@ class WebhookController extends Controller
                     'username' => $uniqueUsername,
                     'expire' => $order->expires_at->timestamp,
                     'data_limit' => $plan->volume_gb * 1024 * 1024 * 1024,
+                    'squad_uuid' => $settings->get('remnawave_squad_uuid'),
                 ]);
 
                 if (!empty($response['subscriptionUrl'])) {
@@ -3360,6 +3361,7 @@ class WebhookController extends Controller
                     'username' => $uniqueUsername,
                     'expire' => $expiresAt->timestamp,
                     'data_limit' => $dataLimitBytes,
+                    'squad_uuid' => $settings->get('remnawave_squad_uuid'),
                 ]);
 
                 if ($response && !empty($response['subscriptionUrl'])) {
