@@ -30,7 +30,7 @@ class RemnawaveService
                 'password' => $this->password,
             ]);
 
-            if ($response->successful() && isset($response->json('response.accessToken'))) {
+            if ($response->successful() && null !== $response->json('response.accessToken')) {
                 $this->accessToken = $response->json('response.accessToken');
                 return true;
             }
