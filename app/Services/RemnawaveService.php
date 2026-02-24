@@ -50,9 +50,10 @@ class RemnawaveService
             // اگر inbound UUID تعریف شده، اضافه کن
             if (!empty($userData['active_user_inbounds'])) {
                 $payload['activeUserInbounds'] = $userData['active_user_inbounds'];
-            } elseif (!empty($userData['squad_uuid'])) {
-                // Remnawave API: activeUserInbounds آرایه می‌گیره
-                $payload['activeUserInbounds'] = [['inboundUuid' => $userData['squad_uuid']]];
+            }
+            // اگر Squad UUID تعریف شده، اضافه کن (اسکوادهای داخلی Remnawave)
+            if (!empty($userData['squad_uuid'])) {
+                $payload['activeInternalSquads'] = [$userData['squad_uuid']];
             }
 
             Log::info('Remnawave Create User Payload:', $payload);
