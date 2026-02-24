@@ -294,25 +294,25 @@ class WebhookController extends Controller
         }
 
         // نرمال‌سازی متن برای دکمه‌هایی که ممکن است نیم‌فاصله داشته باشند یا نداشته باشند
-        $normalizedText = str_replace(['‌', ' '], '', $text);
+        $normalizedText = str_replace(['‌', ' ', 'ـ'], '', $text);
 
         Log::info("HTM_SWITCH_START", ['normalized' => $normalizedText]);
 
-        if ($text === '🛒 خرید سرویس') {
+        if (str_contains($normalizedText, 'خریدسرویس')) {
             $this->sendPlans($chatId);
-        } elseif ($normalizedText === '🛠سرویسهایمن' || $normalizedText === '🛠سرویس‌هایمن') {
+        } elseif (str_contains($normalizedText, 'سرویسهایمن') || str_contains($normalizedText, 'سرویس‌هایمن')) {
             $this->sendMyServices($user);
-        } elseif ($text === '💰 کیف پول') {
+        } elseif (str_contains($normalizedText, 'کیفپول')) {
             $this->sendWalletMenu($user);
-        } elseif ($text === '📜 تاریخچه تراکنش‌ها' || $normalizedText === '📜تاریخچهتراکنشها') {
+        } elseif (str_contains($normalizedText, 'تاریخچهتراکنش')) {
             $this->sendTransactions($user);
-        } elseif ($text === '💬 پشتیبانی') {
+        } elseif (str_contains($normalizedText, 'پشتیبانی')) {
             $this->showSupportMenu($user);
-        } elseif ($text === '🎁 دعوت از دوستان') {
+        } elseif (str_contains($normalizedText, 'دعوتازدوس')) {
             $this->sendReferralMenu($user);
-        } elseif ($text === '📚 راهنمای اتصال') {
+        } elseif (str_contains($normalizedText, 'راهنمایاتصال')) {
             $this->sendTutorialsMenu($chatId);
-        } elseif ($text === '🧪 اکانت تست') {
+        } elseif (str_contains($normalizedText, 'اکانتتست')) {
             $telegramUsername = $message->getFrom()->getUsername();
             $this->handleTrialRequest($user, $telegramUsername);
         } elseif ($text === '/start') {
@@ -1700,6 +1700,8 @@ class WebhookController extends Controller
             $message .= "🎯 *مسیر اتصالِ شما \\(لمس برای کپی\\):*\n";
             $message .= "`" . $this->escapeCode($pureUrl) . "`\n\n";
             $message .= "\> 💡 *" . $this->escape("راهنما:") . "* " . $this->escape("لینک بالا را کپی کرده و در برنامه V2Box (آیفون) یا v2rayNG (اندروید) اضافه کنید.") . "\n";
+            $message .= "━━━━━━ ❖ ━━━━━━\n";
+            $message .= "📢 " . $this->escape("کانال:") . " [PanbehNet](https://t.me/panbehnet) \\| 👨🏻‍💻 " . $this->escape("پشتیبانی:") . " [PanbeHelp](https://t.me/PanbeHelp)\n";
         } else {
             $message .= "⏳ " . $this->escape("در حال آماده‌سازی کانفیگ...");
         }
@@ -1797,6 +1799,8 @@ class WebhookController extends Controller
         $caption .= "🎯 *مسیر اتصالِ شما \\(لمس برای کپی\\):*\n";
         $caption .= "`" . $this->escapeCode($pureUrl) . "`\n\n";
         $caption .= "\> 💡 *" . $this->escape("راهنما:") . "* " . $this->escape("لینک بالا را کپی کرده و در برنامه V2Box (آیفون) یا v2rayNG (اندروید) اضافه کنید.") . "\n";
+        $caption .= "━━━━━━ ❖ ━━━━━━\n";
+        $caption .= "📢 " . $this->escape("کانال:") . " [PanbehNet](https://t.me/panbehnet) \\| 👨🏻‍💻 " . $this->escape("پشتیبانی:") . " [PanbeHelp](https://t.me/PanbeHelp)\n";
 
         // کیبورد
         $keyboard = Keyboard::make()->inline();
@@ -3539,6 +3543,8 @@ class WebhookController extends Controller
                     $message .= "🎯 *مسیر اتصالِ شما \\(لمس برای کپی\\):*\n";
                     $message .= "`" . $this->escapeCode($pureUrl) . "`\n\n";
                     $message .= "\> 💡 *" . $this->escape("راهنما:") . "* " . $this->escape("لینک بالا را کپی کرده و در برنامه V2Box (آیفون) یا v2rayNG (اندروید) اضافه کنید.") . "\n";
+                    $message .= "━━━━━━ ❖ ━━━━━━\n";
+                    $message .= "📢 " . $this->escape("کانال:") . " [PanbehNet](https://t.me/panbehnet) \\| 👨🏻‍💻 " . $this->escape("پشتیبانی:") . " [PanbeHelp](https://t.me/PanbeHelp)\n";
 
                     // کیبورد با دکمه کپی و QR
                     $keyboard = Keyboard::make()->inline()
@@ -3645,16 +3651,16 @@ class WebhookController extends Controller
     {
         return Keyboard::make()->inline()
             ->row([
-                Keyboard::inlineButton(['text' => '🛒 خرید سرویس', 'callback_data' => '/plans']),
-                Keyboard::inlineButton(['text' => '🛠 سرویس‌های من', 'callback_data' => '/my_services']),
+                Keyboard::inlineButton(['text' => '🟢  خـریـد سـرویـس  🟢', 'callback_data' => '/plans']),
+                Keyboard::inlineButton(['text' => '🛍  سـرویـس‌هـای مـن  🛍', 'callback_data' => '/my_services']),
             ])
             ->row([
-                Keyboard::inlineButton(['text' => '💰 کیف پول', 'callback_data' => '/wallet']),
-                Keyboard::inlineButton(['text' => '🎁 دعوت از دوستان', 'callback_data' => '/referral']),
+                Keyboard::inlineButton(['text' => '💳  کـیـف پـول  💳', 'callback_data' => '/wallet']),
+                Keyboard::inlineButton(['text' => '🎁  دعـوت از دوسـتـان  🎁', 'callback_data' => '/referral']),
             ])
             ->row([
-                Keyboard::inlineButton(['text' => '💬 پشتیبانی', 'callback_data' => '/support_menu']),
-                Keyboard::inlineButton(['text' => '📚 راهنمای اتصال', 'callback_data' => '/tutorials']),
+                Keyboard::inlineButton(['text' => '💬  پـشـتـیـبـانـی  💬', 'callback_data' => '/support_menu']),
+                Keyboard::inlineButton(['text' => '📚  راهـنـمـای اتـصـال  📚', 'callback_data' => '/tutorials']),
             ]);
     }
 
@@ -3679,10 +3685,10 @@ class WebhookController extends Controller
         }
 
         $keyboard = [
-            ['🛒 خرید سرویس', '🛠 سرویس‌های من'],
-            ['💰 کیف پول', '📜 تاریخچه تراکنش‌ها'],
-            ['💬 پشتیبانی', '🎁 دعوت از دوستان'],
-            ['📚 راهنمای اتصال', '🧪 اکانت تست'],
+            ['🟢  خـریـد سـرویـس  🟢', '🛍  سـرویـس‌هـای مـن  🛍'],
+            ['💳  کـیـف پـول  💳', '🧾  تـاریـخـچـه تـراکـنـش‌هـا  🧾'],
+            ['💬  پـشـتـیـبـانـی  💬', '🎁  دعـوت از دوسـتـان  🎁'],
+            ['📚  راهـنـمـای اتـصـال  📚', '🧪  اکـانـت تـسـت  🧪'],
         ];
 
         if ($webAppUrl) {
