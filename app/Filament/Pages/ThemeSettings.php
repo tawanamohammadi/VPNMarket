@@ -174,11 +174,8 @@ class ThemeSettings extends Page implements HasForms
                                 ->options([
                                     'marzban' => 'مرزبان',
                                     'xui' => 'تنظیمات پنل سنایی / X-UI / TX-UI',
-<<<<<<< HEAD
-                                    'pasargad' => '🦅 پاسارگاد (PasarGuard)'
-=======
+                                    'pasargad' => '🦅 پاسارگاد (PasarGuard)',
                                     'remnawave' => 'پنل Remnawave',
->>>>>>> 2c367f7 (feat(remnawave): add full remnawave panel integration)
                                 ])
                                 ->live()
                                 ->required(),
@@ -211,7 +208,6 @@ class ThemeSettings extends Page implements HasForms
                                     TextInput::make('marzban_node_hostname')->label('آدرس دامنه/سرور برای کانفیگ')
                                 ]),
 
-<<<<<<< HEAD
                             Section::make('🦅 تنظیمات پنل پاسارگاد')
                                 ->description('اطلاعات اتصال به پنل PasarGuard')
                                 ->icon('heroicon-o-server')
@@ -309,7 +305,6 @@ class ThemeSettings extends Page implements HasForms
                                         ->columnSpan(2)
                                         ->searchable()
                                         ->native(false),
-=======
                             Section::make('تنظیمات پنل Remnawave')
                                 ->visible(fn (Get $get) => $get('panel_type') === 'remnawave')
                                 ->schema([
@@ -317,7 +312,7 @@ class ThemeSettings extends Page implements HasForms
                                     TextInput::make('remnawave_username')->label('نام کاربری عبور')->required(),
                                     TextInput::make('remnawave_password')->label('رمز عبور')->password()->required(),
                                     TextInput::make('remnawave_node_hostname')->label('آدرس سابسکریپشن (مثال: https://sub.example.com)')->required(),
->>>>>>> 2c367f7 (feat(remnawave): add full remnawave panel integration)
+
                                 ]),
 
                             // 🔥 فقط وقتی نمایش داده می‌شود که X-UI انتخاب شده AND مولتی لوکیشن غیرفعال باشد
