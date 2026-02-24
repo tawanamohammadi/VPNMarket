@@ -1664,7 +1664,7 @@ class WebhookController extends Controller
             $remainingText = "*منقضی شده*";
         } elseif ($daysRemaining <= 7) {
             $statusIcon = '🟡';
-            $remainingText = "*" . $this->escape($daysRemaining . ' روز') . "* باقی‌مانده (تمدید کنید)";
+            $remainingText = "*" . $this->escape($daysRemaining . ' روز') . "* باقی‌مانده \\(تمدید کنید\\)";
         } else {
             $remainingText = "*" . $this->escape($daysRemaining . ' روز') . "* باقی‌مانده";
         }
