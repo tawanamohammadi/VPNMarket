@@ -305,6 +305,8 @@ class ThemeSettings extends Page implements HasForms
                                         ->columnSpan(2)
                                         ->searchable()
                                         ->native(false),
+                                ]), // <-- Added closing bracket for the pasargad section schema!
+
                             Section::make('تنظیمات پنل Remnawave')
                                 ->visible(fn (Get $get) => $get('panel_type') === 'remnawave')
                                 ->schema([
