@@ -219,7 +219,8 @@ class WebhookController extends Controller
             }
 
             $telegramSettings = TelegramBotSetting::pluck('value', 'key');
-            $welcomeMessage = $telegramSettings->get('welcome_message', "🌟 خوش آمدید {$userFirstName} عزیز!\n\nبرای شروع، یکی از گزینه‌های منو را انتخاب کنید:");
+            $defaultWelcome = "🕊✨ به دنیای آزادِ پنبه‌نت خوش‌آمدی {userFirstName} عزیز!\n\nاینجا همه‌چیز مثل پنبه سبکه و اینترنتِ بدون مرز، حق طبیعی شماست.\nمن اینجام تا امن‌ترین و سریع‌ترین مسیرِ «گذر آزاد» رو برات فراهم کنم.\n\n👇 برای شروع، از منوی زیر مسیرت رو انتخاب کن:";
+            $welcomeMessage = $telegramSettings->get('welcome_message', $defaultWelcome);
             $welcomeMessage = str_replace('{userFirstName}', $userFirstName, $welcomeMessage);
 
             if (Str::startsWith($text, '/start ')) {
@@ -1678,20 +1679,20 @@ class WebhookController extends Controller
              $locationName = 'سرویس Eagle';
         }
 
-        $message = "🔍 *جزئیات اشتراک \\#{$order->id}*\n";
+        $message = "💎 *گذرنامهٔ آزادِ شما \\(کد: \\#{$order->id}\\)*\n";
         $message .= "━━━━━━━━━━━━━━━\n\n";
-        $message .= "💎 *سرویس:* " . $this->escape($order->plan->name) . "\n";
+        $message .= "🚀 *سطح دسترسی:* " . $this->escape($order->plan->name) . "\n";
         $message .= "🌍 *موقعیت:* {$locationFlag} " . $this->escape($locationName) . "\n";
-        $message .= "👤 *نام کاربری:* `" . $this->escapeCode($panelUsername) . "`\n";
+        $message .= "👤 *کد رهگیری:* `" . $this->escapeCode($panelUsername) . "`\n";
         $message .= "🗓 *انقضا:* " . $this->escape($expiresAt->format('Y/m/d')) . "\n";
         $message .= "⏱ *وضعیت:* " . $remainingText . "\n";
-        $message .= "📦 *حجم کل:* " . $this->escape($order->plan->volume_gb . ' گیگابایت') . "\n\n";
+        $message .= "📦 *حجم در دسترس:* " . $this->escape($order->plan->volume_gb . ' گیگابایت') . "\n\n";
         
         if (!empty($order->config_details)) {
-            $message .= "🔗 *لینک اشتراک اختصاصی:*\n";
+            $message .= "🔗 *مسیر اتصالِ اختصاصی شما:*\n";
             // اصلاح: استفاده از escapeCode برای محتوای داخل کد بلاک
             $message .= "`" . $this->escapeCode($order->config_details) . "`\n\n";
-            $message .= "👆🏻 " . $this->escape("برای کپی سریع روی لینک بالا بزنید!") . "\n";
+            $message .= "👆🏻 " . $this->escape("لمس کن، کپی کن و به دنیای آزاد وصل شو.") . "\n";
         } else {
             $message .= "⏳ " . $this->escape("در حال آماده‌سازی کانفیگ...");
         }
@@ -1771,18 +1772,18 @@ class WebhookController extends Controller
         }
 
         // متن کپشن (مشابه showServiceDetails)
-        $caption = "🔍 *جزئیات اشتراک \\#{$order->id}*\n";
+        $caption = "💎 *گذرنامهٔ آزادِ شما \\(کد: \\#{$order->id}\\)*\n";
         $caption .= "━━━━━━━━━━━━━━━\n\n";
-        $caption .= "💎 *سرویس:* " . $this->escape($order->plan->name) . "\n";
+        $caption .= "🚀 *سطح دسترسی:* " . $this->escape($order->plan->name) . "\n";
         $caption .= "🌍 *موقعیت:* {$locationFlag} " . $this->escape($locationName) . "\n";
-        $caption .= "👤 *نام کاربری:* `" . $this->escapeCode($panelUsername) . "`\n";
+        $caption .= "👤 *کد رهگیری:* `" . $this->escapeCode($panelUsername) . "`\n";
         $caption .= "🗓 *انقضا:* " . $this->escape($expiresAt->format('Y/m/d')) . "\n";
         $caption .= "⏱ *وضعیت:* " . $remainingText . "\n";
-        $caption .= "📦 *حجم کل:* " . $this->escape($order->plan->volume_gb . ' گیگابایت') . "\n\n";
+        $caption .= "📦 *حجم در دسترس:* " . $this->escape($order->plan->volume_gb . ' گیگابایت') . "\n\n";
         
-        $caption .= "🔗 *لینک اشتراک اختصاصی:*\n";
+        $caption .= "🔗 *مسیر اتصالِ اختصاصی شما:*\n";
         $caption .= "`" . $this->escapeCode($configLink) . "`\n\n";
-        $caption .= "👆🏻 " . $this->escape("برای کپی سریع روی لینک بالا بزنید!") . "\n";
+        $caption .= "👆🏻 " . $this->escape("لمس کن، کپی کن و به دنیای آزاد وصل شو.") . "\n";
 
         // کیبورد
         $keyboard = Keyboard::make()->inline();
@@ -1852,10 +1853,10 @@ class WebhookController extends Controller
     protected function sendWalletMenu($user, $messageId = null)
     {
         $balance = number_format($user->balance ?? 0);
-        $message = "💰 *کیف پول شما*\n";
+        $message = "💳 *صندوقچهٔ پنبه‌نت*\n";
         $message .= "━━━━━━━━━━━━━━━\n\n";
-        $message .= "💵 موجودی فعلی: *" . $this->escape($balance . ' تومان') . "*\n\n";
-        $message .= "می‌توانید حساب خود را شارژ کنید یا تاریخچه تراکنش‌ها را مشاهده نمایید:";
+        $message .= "💰 موجودی فعلی: *" . $this->escape($balance . ' تومان') . "*\n\n";
+        $message .= $this->escape("با شارژ کیف‌پولت، اشتراکت رو توی چند ثانیه و بدون معطلیِ درگاه بانکی تمدید کن! سریع و بی‌دردسر. ⚡️") . "\n";
 
         $keyboard = Keyboard::make()->inline()
             ->row([
@@ -3505,14 +3506,15 @@ class WebhookController extends Controller
                 \Illuminate\Support\Facades\Cache::put("trial_link_{$user->id}", $configLink, now()->addMinutes(10));
 
                     // ساخت پیام کامل با ظاهر پریمیوم
-                    $message = "🔑 *اشتراک تست شما با موفقیت ساخته شد*\n\n";
-                    $message .= "👤 *نام کاربری شما:* \n`" . $this->escape($uniqueUsername) . "`\n\n";
+                    $message = "🧪 *طعمِ گذرِ آزاد رو بچش\\!*\n\n";
+                    $message .= $this->escape("اکانت تست شما با بالاترین سرعتِ ممکن فعال شد. بفرما... اینم بلیطِ یک‌طرفه به اینترنتِ بدون فیلتر. فقط یادت باشه این یه دست‌گرمیه! 😉") . "\n\n";
+                    $message .= "👤 *نام کاربری:* `" . $this->escapeCode($uniqueUsername) . "`\n";
                     $message .= "🌍 *موقعیت:* {$locationFlag} " . $this->escape($locationName) . "\n";
-                    $message .= "📦 *حجم:* `{$volumeMB}` " . $this->escape("مگابایت") . "\n";
-                    $message .= "⏳ *اعتبار:* `{$durationHours}` " . $this->escape("ساعت") . "\n\n";
-                    $message .= "🔗 *لینک اشتراک شما:*\n";
+                    $message .= "📦 *حجم:* `" . $this->escape($volumeMB) . "` " . $this->escape("مگابایت") . "\n";
+                    $message .= "⏳ *اعتبار:* `" . $this->escape($durationHours) . "` " . $this->escape("ساعت") . "\n\n";
+                    $message .= "🔗 *مسیر اتصالِ شما:*\n";
                     $message .= "`{$configLink}`\n\n";
-                    $message .= "👆🏻 " . $this->escape("برای کپی کردن لینک بالا کافیست روی آن بزنید!") . "\n\n";
+                    $message .= "👆🏻 " . $this->escape("لمس کن، کپی کن و به دنیای آزاد وصل شو.") . "\n\n";
                     $message .= $this->escape("⚠️ از نرم‌افزارهای v2rayNG (اندروید) یا V2Box (آیفون) استفاده کنید.");
 
                     // کیبورد با دکمه کپی و QR
