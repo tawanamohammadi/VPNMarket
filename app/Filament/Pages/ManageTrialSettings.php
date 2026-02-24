@@ -98,7 +98,7 @@ class ManageTrialSettings extends Page implements HasForms
                             ->label('فعال‌سازی اکانت تست')
                             ->helperText('اگر فعال باشد، کاربران می‌توانند از ربات اکانت تست دریافت کنند.'),
 
-                        // سرور مخصوص (برای پنل‌های multi-server)
+                        // سرور مخصوص (برای پنل‌های multi-server، نه Remnawave)
                         Select::make('trial_server_id')
                             ->label('سرور مخصوص اکانت تست')
                             ->options(function () {
@@ -114,7 +114,8 @@ class ManageTrialSettings extends Page implements HasForms
                             ->searchable()
                             ->preload()
                             ->placeholder('انتخاب کنید...')
-                            ->helperText('اکانت‌های تست روی این سرور ساخته می‌شوند. اگر انتخاب نکنید، سیستم خودکار یک سرور خالی را انتخاب می‌کند.'),
+                            ->helperText('اکانت‌های تست روی این سرور ساخته می‌شوند. اگر انتخاب نکنید، سیستم خودکار یک سرور خالی را انتخاب می‌کند.')
+                            ->visible(!$isRemnawave),
 
                         // Squad انتخابی برای Remnawave
                         Select::make('remnawave_squad_uuid')
