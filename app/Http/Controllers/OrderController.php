@@ -13,6 +13,7 @@ use App\Models\Transaction;
 use App\Services\MarzbanService;
 use App\Services\XUIService;
 use App\Services\PasargadService;
+use App\Services\RemnawaveService;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -488,6 +489,32 @@ class OrderController extends Controller
 
                     if ($response && (isset($response['subscription_url']) || isset($response['username']))) {
                         $finalConfig = $marzbanService->generateSubscriptionLink($response);
+                        $success = true;
+                    }
+                }
+
+                // ==========================================
+                // پنل Remnawave
+                // ==========================================
+                elseif ($panelType === 'remnawave') {
+                    $remnawaveService = new RemnawaveService(
+                        $settings->get('remnawave_host'),
+                        $settings->get('remnawave_username'),
+                        $settings->get('remnawave_password'),
+                        $settings->get('remnawave_node_hostname')
+                    );
+
+                    $userData = [
+                        'expire' => $timestamp,
+                        'data_limit' => $plan->volume_gb * 1073741824
+                    ];
+
+                    $response = $isRenewal
+                        ? $remnawaveService->updateUser($uniqueUsername, $userData)
+                        : $remnawaveService->createUser(array_merge($userData, ['username' => $uniqueUsername]));
+
+                    if ($response && (isset($response['subscriptionUrl']) || isset($response['username']))) {
+                        $finalConfig = $remnawaveService->generateSubscriptionLink($response);
                         $success = true;
                     }
                 }

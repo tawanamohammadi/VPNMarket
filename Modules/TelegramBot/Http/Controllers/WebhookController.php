@@ -10,6 +10,7 @@ use App\Services\XUIService;
 use App\Models\User;
 use App\Services\MarzbanService;
 use App\Services\PasargadService;
+use App\Services\RemnawaveService;
 use App\Models\Inbound;
 use Modules\Ticketing\Events\TicketCreated;
 use Modules\Ticketing\Events\TicketReplied;
@@ -2103,6 +2104,30 @@ class WebhookController extends Controller
                 }
             }
             // ==========================================
+            // پنل Remnawave
+            // ==========================================
+            elseif ($panelType === 'remnawave' && !$isMultiServer) {
+                $remnawave = new RemnawaveService(
+                    $settings->get('remnawave_host'),
+                    $settings->get('remnawave_username'),
+                    $settings->get('remnawave_password'),
+                    $settings->get('remnawave_node_hostname')
+                );
+                $response = $remnawave->createUser([
+                    'username' => $uniqueUsername,
+                    'expire' => $order->expires_at->timestamp,
+                    'data_limit' => $plan->volume_gb * 1024 * 1024 * 1024,
+                ]);
+
+                if (!empty($response['subscriptionUrl'])) {
+                    $configData['link'] = $remnawave->generateSubscriptionLink($response);
+                    $configData['username'] = $uniqueUsername;
+                } else {
+                    Log::error('Remnawave user creation failed.', ['response' => $response]);
+                    return null;
+                }
+            }
+            // ==========================================
             // پنل X-UI
             // ==========================================
             elseif ($panelType === 'xui') {
@@ -2670,6 +2695,31 @@ class WebhookController extends Controller
                     $originalOrder->update(['expires_at' => $newExpiryDate]);
                     return [
                         'link' => $originalOrder->config_details,
+                        'username' => $uniqueUsername
+                    ];
+                } else {
+                    return null;
+                }
+            }
+            // --- REMNAWAVE ---
+            elseif ($panelType === 'remnawave') {
+                $remnawave = new RemnawaveService(
+                    $settings->get('remnawave_host'),
+                    $settings->get('remnawave_username'),
+                    $settings->get('remnawave_password'),
+                    $settings->get('remnawave_node_hostname')
+                );
+
+                $updateResponse = $remnawave->updateUser($uniqueUsername, [
+                    'expire' => $newExpiryDate->timestamp,
+                    'data_limit' => $plan->volume_gb * 1073741824,
+                ]);
+                $resetResponse = $remnawave->resetTraffic($uniqueUsername);
+
+                if ($updateResponse !== null && $resetResponse !== null) {
+                    $originalOrder->update(['expires_at' => $newExpiryDate]);
+                    return [
+                        'link' => $originalOrder->config_details, // or regenerate
                         'username' => $uniqueUsername
                     ];
                 } else {
@@ -3300,6 +3350,25 @@ class WebhookController extends Controller
                     $configLink = $response['subscription_url'];
                 } else {
                     throw new \Exception('خطا در ارتباط با پنل مرزبان.');
+                }
+
+            } elseif ($panelType === 'remnawave') {
+                $remnawaveService = new RemnawaveService(
+                    $settings->get('remnawave_host'),
+                    $settings->get('remnawave_username'),
+                    $settings->get('remnawave_password'),
+                    $settings->get('remnawave_node_hostname')
+                );
+                $response = $remnawaveService->createUser([
+                    'username' => $uniqueUsername,
+                    'expire' => $expiresAt->timestamp,
+                    'data_limit' => $dataLimitBytes,
+                ]);
+
+                if ($response && !empty($response['subscriptionUrl'])) {
+                    $configLink = $remnawaveService->generateSubscriptionLink($response);
+                } else {
+                    throw new \Exception('خطا در ارتباط با پنل Remnawave.');
                 }
 
             } elseif ($panelType === 'xui') {

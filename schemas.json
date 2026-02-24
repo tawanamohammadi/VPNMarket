@@ -1,0 +1,24 @@
+{
+  "POST /api/auth/login": {
+    "request": {
+      "$ref": "#/components/schemas/LoginRequestDto"
+    },
+    "responseRef": {
+      "$ref": "#/components/schemas/LoginResponseDto"
+    }
+  },
+  "POST /api/users": {
+    "request": {
+      "$ref": "#/components/schemas/CreateUserRequestDto"
+    },
+    "responseRef": null
+  },
+  "PATCH /api/users": {
+    "request": {
+      "$ref": "#/components/schemas/UpdateUserRequestDto"
+    },
+    "responseRef": {
+      "$ref": "#/components/schemas/UpdateUserResponseDto"
+    }
+  }
+}

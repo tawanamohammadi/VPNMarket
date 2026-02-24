@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\Transaction;
 use App\Services\MarzbanService;
 use App\Services\XUIService;
+use App\Services\RemnawaveService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -159,6 +160,30 @@ class OrderResource extends Resource
                                         $finalConfig = $marzbanService->generateSubscriptionLink($response);
                                         $success = true;
                                     } else throw new \Exception('خطا در مرزبان');
+
+                                } elseif ($panelType === 'remnawave') {
+                                    $remnawaveService = new RemnawaveService(
+                                        (string) $settings->get('remnawave_host'),
+                                        (string) $settings->get('remnawave_username'),
+                                        (string) $settings->get('remnawave_password'),
+                                        (string) $settings->get('remnawave_node_hostname')
+                                    );
+
+                                    $userData = ['expire' => $newExpiresAt->getTimestamp(), 'data_limit' => $plan->volume_gb * 1073741824];
+
+                                    if ($isRenewal) {
+                                        $response = $remnawaveService->updateUser($uniqueUsername, $userData);
+                                        $remnawaveService->resetTraffic($uniqueUsername);
+                                    } else {
+                                        $response = $remnawaveService->createUser(array_merge($userData, ['username' => $uniqueUsername]));
+                                    }
+
+                                    if ($response && (isset($response['subscriptionUrl']) || isset($response['username']))) {
+                                        $finalConfig = $remnawaveService->generateSubscriptionLink($response);
+                                        $success = true;
+                                    } else {
+                                        throw new \Exception('خطا در پنل Remnawave');
+                                    }
 
                                 } elseif ($panelType === 'xui') {
                                     $xui = new XUIService($xuiHost, $xuiUser, $xuiPass);

@@ -1,0 +1,1119 @@
+{
+  "LoginRequestDto": {
+    "type": "object",
+    "properties": {
+      "username": {
+        "type": "string"
+      },
+      "password": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "username",
+      "password"
+    ]
+  },
+  "LoginResponseDto": {
+    "type": "object",
+    "properties": {
+      "response": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessToken"
+        ]
+      }
+    },
+    "required": [
+      "response"
+    ]
+  },
+  "CreateUserRequestDto": {
+    "type": "object",
+    "properties": {
+      "username": {
+        "description": "Unique username for the user. Required. Must be 3-36 characters long and contain only letters, numbers, underscores and dashes.",
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_-]+$",
+        "maxLength": 36,
+        "minLength": 3
+      },
+      "status": {
+        "description": "Optional. User account status. Defaults to ACTIVE.",
+        "type": "string",
+        "enum": [
+          "ACTIVE",
+          "DISABLED",
+          "LIMITED",
+          "EXPIRED"
+        ],
+        "x-enumNames": [
+          "ACTIVE",
+          "DISABLED",
+          "LIMITED",
+          "EXPIRED"
+        ],
+        "default": "ACTIVE"
+      },
+      "shortUuid": {
+        "description": "Optional. Short UUID identifier for the user.",
+        "type": "string"
+      },
+      "trojanPassword": {
+        "description": "Optional. Password for Trojan protocol. Must be 8-32 characters.",
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 32
+      },
+      "vlessUuid": {
+        "description": "Optional. UUID for VLESS protocol. Must be a valid UUID format.",
+        "type": "string",
+        "format": "uuid"
+      },
+      "ssPassword": {
+        "description": "Optional. Password for Shadowsocks protocol. Must be 8-32 characters.",
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 32
+      },
+      "trafficLimitBytes": {
+        "description": "Optional. Traffic limit in bytes. Set to 0 for unlimited traffic.",
+        "type": "integer",
+        "minimum": 0,
+        "exclusiveMinimum": false
+      },
+      "trafficLimitStrategy": {
+        "description": "Available reset periods",
+        "type": "string",
+        "enum": [
+          "NO_RESET",
+          "DAY",
+          "WEEK",
+          "MONTH"
+        ],
+        "x-enumNames": [
+          "NO_RESET",
+          "DAY",
+          "WEEK",
+          "MONTH"
+        ],
+        "default": "NO_RESET"
+      },
+      "expireAt": {
+        "description": "Account expiration date. Required. Format: 2025-01-17T15:38:45.065Z",
+        "type": "string",
+        "format": "date-time"
+      },
+      "createdAt": {
+        "description": "Optional. Account creation date. Format: 2025-01-17T15:38:45.065Z",
+        "type": "string",
+        "format": "date-time"
+      },
+      "lastTrafficResetAt": {
+        "description": "Optional. Date of last traffic reset. Format: 2025-01-17T15:38:45.065Z",
+        "type": "string",
+        "format": "date-time"
+      },
+      "description": {
+        "description": "Optional. Additional notes or description for the user account.",
+        "type": "string"
+      },
+      "tag": {
+        "description": "Optional. User tag for categorization. Max 16 characters, uppercase letters, numbers and underscores only.",
+        "type": "string",
+        "pattern": "^[A-Z0-9_]+$",
+        "maxLength": 16,
+        "nullable": true
+      },
+      "telegramId": {
+        "description": "Optional. Telegram user ID for notifications. Must be an integer.",
+        "type": "integer",
+        "nullable": true
+      },
+      "email": {
+        "description": "Optional. User email address. Must be a valid email format.",
+        "type": "string",
+        "format": "email",
+        "nullable": true
+      },
+      "hwidDeviceLimit": {
+        "description": "Optional. Maximum number of hardware devices allowed. Must be a positive integer.",
+        "type": "integer",
+        "minimum": 0,
+        "exclusiveMinimum": false
+      },
+      "activeInternalSquads": {
+        "description": "Optional. Array of UUIDs representing enabled internal squads.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "uuid": {
+        "description": "Optional. Pass UUID to create user with specific UUID, otherwise it will be generated automatically.",
+        "type": "string",
+        "format": "uuid"
+      },
+      "externalSquadUuid": {
+        "description": "Optional. External squad UUID.",
+        "type": "string",
+        "format": "uuid",
+        "nullable": true
+      }
+    },
+    "required": [
+      "username",
+      "expireAt"
+    ]
+  },
+  "UpdateUserRequestDto": {
+    "type": "object",
+    "properties": {
+      "username": {
+        "description": "Username of the user",
+        "type": "string"
+      },
+      "uuid": {
+        "description": "UUID of the user. UUID has higher priority than username, so if both are provided, username will be ignored.",
+        "type": "string",
+        "format": "uuid"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "ACTIVE",
+          "DISABLED"
+        ]
+      },
+      "trafficLimitBytes": {
+        "description": "Traffic limit in bytes. 0 - unlimited",
+        "type": "integer",
+        "minimum": 0,
+        "exclusiveMinimum": false
+      },
+      "trafficLimitStrategy": {
+        "description": "Available reset periods",
+        "type": "string",
+        "enum": [
+          "NO_RESET",
+          "DAY",
+          "WEEK",
+          "MONTH"
+        ],
+        "x-enumNames": [
+          "NO_RESET",
+          "DAY",
+          "WEEK",
+          "MONTH"
+        ],
+        "default": "NO_RESET"
+      },
+      "expireAt": {
+        "description": "Expiration date: 2025-01-17T15:38:45.065Z",
+        "type": "string",
+        "format": "date-time"
+      },
+      "description": {
+        "type": "string",
+        "nullable": true
+      },
+      "tag": {
+        "type": "string",
+        "pattern": "^[A-Z0-9_]+$",
+        "maxLength": 16,
+        "nullable": true
+      },
+      "telegramId": {
+        "type": "integer",
+        "nullable": true
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "nullable": true
+      },
+      "hwidDeviceLimit": {
+        "type": "integer",
+        "minimum": 0,
+        "exclusiveMinimum": false,
+        "nullable": true
+      },
+      "activeInternalSquads": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "externalSquadUuid": {
+        "description": "Optional. External squad UUID.",
+        "type": "string",
+        "format": "uuid",
+        "nullable": true
+      }
+    }
+  },
+  "DeleteUserByUuidResponseDto": "Not found",
+  "ResetUserTrafficResponseDto": {
+    "type": "object",
+    "properties": {
+      "response": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "type": "number"
+          },
+          "shortUuid": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED",
+              "LIMITED",
+              "EXPIRED"
+            ],
+            "x-enumNames": [
+              "ACTIVE",
+              "DISABLED",
+              "LIMITED",
+              "EXPIRED"
+            ],
+            "default": "ACTIVE"
+          },
+          "trafficLimitBytes": {
+            "type": "integer",
+            "default": 0
+          },
+          "trafficLimitStrategy": {
+            "description": "Available reset periods",
+            "type": "string",
+            "enum": [
+              "NO_RESET",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ],
+            "x-enumNames": [
+              "NO_RESET",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ],
+            "default": "NO_RESET"
+          },
+          "expireAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "telegramId": {
+            "type": "integer",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "tag": {
+            "type": "string",
+            "nullable": true
+          },
+          "hwidDeviceLimit": {
+            "type": "integer",
+            "nullable": true
+          },
+          "externalSquadUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "trojanPassword": {
+            "type": "string"
+          },
+          "vlessUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ssPassword": {
+            "type": "string"
+          },
+          "lastTriggeredThreshold": {
+            "type": "integer",
+            "default": 0
+          },
+          "subRevokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "subLastUserAgent": {
+            "type": "string",
+            "nullable": true
+          },
+          "subLastOpenedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastTrafficResetAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "subscriptionUrl": {
+            "type": "string"
+          },
+          "activeInternalSquads": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uuid": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "uuid",
+                "name"
+              ]
+            }
+          },
+          "userTraffic": {
+            "type": "object",
+            "properties": {
+              "usedTrafficBytes": {
+                "type": "number"
+              },
+              "lifetimeUsedTrafficBytes": {
+                "type": "number"
+              },
+              "onlineAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "firstConnectedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "lastConnectedNodeUuid": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              }
+            },
+            "required": [
+              "usedTrafficBytes",
+              "lifetimeUsedTrafficBytes",
+              "onlineAt",
+              "firstConnectedAt",
+              "lastConnectedNodeUuid"
+            ]
+          }
+        },
+        "required": [
+          "uuid",
+          "id",
+          "shortUuid",
+          "username",
+          "expireAt",
+          "telegramId",
+          "email",
+          "description",
+          "tag",
+          "hwidDeviceLimit",
+          "externalSquadUuid",
+          "trojanPassword",
+          "vlessUuid",
+          "ssPassword",
+          "subRevokedAt",
+          "subLastUserAgent",
+          "subLastOpenedAt",
+          "lastTrafficResetAt",
+          "createdAt",
+          "updatedAt",
+          "subscriptionUrl",
+          "activeInternalSquads",
+          "userTraffic"
+        ]
+      }
+    },
+    "required": [
+      "response"
+    ]
+  },
+  "DisableUserResponseDto": {
+    "type": "object",
+    "properties": {
+      "response": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "type": "number"
+          },
+          "shortUuid": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED",
+              "LIMITED",
+              "EXPIRED"
+            ],
+            "x-enumNames": [
+              "ACTIVE",
+              "DISABLED",
+              "LIMITED",
+              "EXPIRED"
+            ],
+            "default": "ACTIVE"
+          },
+          "trafficLimitBytes": {
+            "type": "integer",
+            "default": 0
+          },
+          "trafficLimitStrategy": {
+            "description": "Available reset periods",
+            "type": "string",
+            "enum": [
+              "NO_RESET",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ],
+            "x-enumNames": [
+              "NO_RESET",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ],
+            "default": "NO_RESET"
+          },
+          "expireAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "telegramId": {
+            "type": "integer",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "tag": {
+            "type": "string",
+            "nullable": true
+          },
+          "hwidDeviceLimit": {
+            "type": "integer",
+            "nullable": true
+          },
+          "externalSquadUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "trojanPassword": {
+            "type": "string"
+          },
+          "vlessUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ssPassword": {
+            "type": "string"
+          },
+          "lastTriggeredThreshold": {
+            "type": "integer",
+            "default": 0
+          },
+          "subRevokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "subLastUserAgent": {
+            "type": "string",
+            "nullable": true
+          },
+          "subLastOpenedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastTrafficResetAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "subscriptionUrl": {
+            "type": "string"
+          },
+          "activeInternalSquads": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uuid": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "uuid",
+                "name"
+              ]
+            }
+          },
+          "userTraffic": {
+            "type": "object",
+            "properties": {
+              "usedTrafficBytes": {
+                "type": "number"
+              },
+              "lifetimeUsedTrafficBytes": {
+                "type": "number"
+              },
+              "onlineAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "firstConnectedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "lastConnectedNodeUuid": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              }
+            },
+            "required": [
+              "usedTrafficBytes",
+              "lifetimeUsedTrafficBytes",
+              "onlineAt",
+              "firstConnectedAt",
+              "lastConnectedNodeUuid"
+            ]
+          }
+        },
+        "required": [
+          "uuid",
+          "id",
+          "shortUuid",
+          "username",
+          "expireAt",
+          "telegramId",
+          "email",
+          "description",
+          "tag",
+          "hwidDeviceLimit",
+          "externalSquadUuid",
+          "trojanPassword",
+          "vlessUuid",
+          "ssPassword",
+          "subRevokedAt",
+          "subLastUserAgent",
+          "subLastOpenedAt",
+          "lastTrafficResetAt",
+          "createdAt",
+          "updatedAt",
+          "subscriptionUrl",
+          "activeInternalSquads",
+          "userTraffic"
+        ]
+      }
+    },
+    "required": [
+      "response"
+    ]
+  },
+  "EnableUserResponseDto": {
+    "type": "object",
+    "properties": {
+      "response": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "type": "number"
+          },
+          "shortUuid": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED",
+              "LIMITED",
+              "EXPIRED"
+            ],
+            "x-enumNames": [
+              "ACTIVE",
+              "DISABLED",
+              "LIMITED",
+              "EXPIRED"
+            ],
+            "default": "ACTIVE"
+          },
+          "trafficLimitBytes": {
+            "type": "integer",
+            "default": 0
+          },
+          "trafficLimitStrategy": {
+            "description": "Available reset periods",
+            "type": "string",
+            "enum": [
+              "NO_RESET",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ],
+            "x-enumNames": [
+              "NO_RESET",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ],
+            "default": "NO_RESET"
+          },
+          "expireAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "telegramId": {
+            "type": "integer",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "tag": {
+            "type": "string",
+            "nullable": true
+          },
+          "hwidDeviceLimit": {
+            "type": "integer",
+            "nullable": true
+          },
+          "externalSquadUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "trojanPassword": {
+            "type": "string"
+          },
+          "vlessUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ssPassword": {
+            "type": "string"
+          },
+          "lastTriggeredThreshold": {
+            "type": "integer",
+            "default": 0
+          },
+          "subRevokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "subLastUserAgent": {
+            "type": "string",
+            "nullable": true
+          },
+          "subLastOpenedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastTrafficResetAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "subscriptionUrl": {
+            "type": "string"
+          },
+          "activeInternalSquads": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uuid": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "uuid",
+                "name"
+              ]
+            }
+          },
+          "userTraffic": {
+            "type": "object",
+            "properties": {
+              "usedTrafficBytes": {
+                "type": "number"
+              },
+              "lifetimeUsedTrafficBytes": {
+                "type": "number"
+              },
+              "onlineAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "firstConnectedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "lastConnectedNodeUuid": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              }
+            },
+            "required": [
+              "usedTrafficBytes",
+              "lifetimeUsedTrafficBytes",
+              "onlineAt",
+              "firstConnectedAt",
+              "lastConnectedNodeUuid"
+            ]
+          }
+        },
+        "required": [
+          "uuid",
+          "id",
+          "shortUuid",
+          "username",
+          "expireAt",
+          "telegramId",
+          "email",
+          "description",
+          "tag",
+          "hwidDeviceLimit",
+          "externalSquadUuid",
+          "trojanPassword",
+          "vlessUuid",
+          "ssPassword",
+          "subRevokedAt",
+          "subLastUserAgent",
+          "subLastOpenedAt",
+          "lastTrafficResetAt",
+          "createdAt",
+          "updatedAt",
+          "subscriptionUrl",
+          "activeInternalSquads",
+          "userTraffic"
+        ]
+      }
+    },
+    "required": [
+      "response"
+    ]
+  },
+  "CreateUserResponseDto": {
+    "type": "object",
+    "properties": {
+      "response": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "type": "number"
+          },
+          "shortUuid": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED",
+              "LIMITED",
+              "EXPIRED"
+            ],
+            "x-enumNames": [
+              "ACTIVE",
+              "DISABLED",
+              "LIMITED",
+              "EXPIRED"
+            ],
+            "default": "ACTIVE"
+          },
+          "trafficLimitBytes": {
+            "type": "integer",
+            "default": 0
+          },
+          "trafficLimitStrategy": {
+            "description": "Available reset periods",
+            "type": "string",
+            "enum": [
+              "NO_RESET",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ],
+            "x-enumNames": [
+              "NO_RESET",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ],
+            "default": "NO_RESET"
+          },
+          "expireAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "telegramId": {
+            "type": "integer",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "tag": {
+            "type": "string",
+            "nullable": true
+          },
+          "hwidDeviceLimit": {
+            "type": "integer",
+            "nullable": true
+          },
+          "externalSquadUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "trojanPassword": {
+            "type": "string"
+          },
+          "vlessUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ssPassword": {
+            "type": "string"
+          },
+          "lastTriggeredThreshold": {
+            "type": "integer",
+            "default": 0
+          },
+          "subRevokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "subLastUserAgent": {
+            "type": "string",
+            "nullable": true
+          },
+          "subLastOpenedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastTrafficResetAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "subscriptionUrl": {
+            "type": "string"
+          },
+          "activeInternalSquads": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uuid": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "uuid",
+                "name"
+              ]
+            }
+          },
+          "userTraffic": {
+            "type": "object",
+            "properties": {
+              "usedTrafficBytes": {
+                "type": "number"
+              },
+              "lifetimeUsedTrafficBytes": {
+                "type": "number"
+              },
+              "onlineAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "firstConnectedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "lastConnectedNodeUuid": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              }
+            },
+            "required": [
+              "usedTrafficBytes",
+              "lifetimeUsedTrafficBytes",
+              "onlineAt",
+              "firstConnectedAt",
+              "lastConnectedNodeUuid"
+            ]
+          }
+        },
+        "required": [
+          "uuid",
+          "id",
+          "shortUuid",
+          "username",
+          "expireAt",
+          "telegramId",
+          "email",
+          "description",
+          "tag",
+          "hwidDeviceLimit",
+          "externalSquadUuid",
+          "trojanPassword",
+          "vlessUuid",
+          "ssPassword",
+          "subRevokedAt",
+          "subLastUserAgent",
+          "subLastOpenedAt",
+          "lastTrafficResetAt",
+          "createdAt",
+          "updatedAt",
+          "subscriptionUrl",
+          "activeInternalSquads",
+          "userTraffic"
+        ]
+      }
+    },
+    "required": [
+      "response"
+    ]
+  }
+}

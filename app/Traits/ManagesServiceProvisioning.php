@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Services\MarzbanService;
 use App\Services\XUIService;
 use App\Services\PasargadService;
+use App\Services\RemnawaveService;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
@@ -77,6 +78,32 @@ trait ManagesServiceProvisioning
                     $success = true;
                 } else {
                     $error = $response['detail'] ?? 'پاسخ نامعتبر از مرزبان.';
+                    $this->handleProvisioningError($error, $isTelegramContext, ['response' => $response]);
+                    return false;
+                }
+
+            } elseif ($panelType === 'remnawave') {
+                $remnawaveService = new RemnawaveService(
+                    $settings->get('remnawave_host'),
+                    $settings->get('remnawave_username'),
+                    $settings->get('remnawave_password'),
+                    $settings->get('remnawave_node_hostname')
+                );
+
+                $userData = [
+                    'expire' => $newExpiresAt->getTimestamp(),
+                    'data_limit' => $plan->data_limit_gb * 1024 * 1024 * 1024
+                ];
+
+                $response = $isRenewal
+                    ? $remnawaveService->updateUser($uniqueUsername, $userData)
+                    : $remnawaveService->createUser(array_merge($userData, ['username' => $uniqueUsername]));
+
+                if ($response && (isset($response['subscriptionUrl']) || isset($response['username']))) {
+                    $finalConfig = $remnawaveService->generateSubscriptionLink($response);
+                    $success = true;
+                } else {
+                    $error = $response['message'] ?? 'پاسخ نامعتبر از Remnawave.';
                     $this->handleProvisioningError($error, $isTelegramContext, ['response' => $response]);
                     return false;
                 }

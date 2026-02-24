@@ -1,0 +1,164 @@
+GET /api/remnawave-settings -> Get Remnawave settings
+PATCH /api/remnawave-settings -> Update Remnawave settings
+GET /api/passkeys/registration/options -> Get registration options for passkey
+POST /api/passkeys/registration/verify -> Verify registration for passkey
+GET /api/passkeys -> Get all passkeys
+DELETE /api/passkeys -> Delete a passkey by ID
+PATCH /api/passkeys -> Update passkey
+POST /api/auth/login -> Login as superadmin
+POST /api/auth/register -> Register as superadmin
+GET /api/auth/status -> Get the status of the authentication
+POST /api/auth/oauth2/tg/callback -> Callback from Telegram OAuth2
+POST /api/auth/oauth2/authorize -> Initiate OAuth2 authorization
+POST /api/auth/oauth2/callback -> Callback from OAuth2
+GET /api/auth/passkey/authentication/options -> Get the authentication options for passkey
+POST /api/auth/passkey/authentication/verify -> Verify the authentication for passkey
+GET /api/subscription-page-configs -> Get all subscription page configs
+PATCH /api/subscription-page-configs -> Update subscription page config
+POST /api/subscription-page-configs -> Create subscription page config
+GET /api/subscription-page-configs/{uuid} -> Get subscription page config by uuid
+DELETE /api/subscription-page-configs/{uuid} -> Delete subscription page config
+POST /api/subscription-page-configs/actions/reorder -> Reorder subscription page configs
+POST /api/subscription-page-configs/actions/clone -> Clone subscription page config
+POST /api/users -> Create a new user
+PATCH /api/users -> Update a user by UUID or username
+GET /api/users -> Get all users
+DELETE /api/users/{uuid} -> Delete user
+GET /api/users/{uuid} -> Get user by UUID
+GET /api/users/tags -> Get all existing user tags
+GET /api/users/{uuid}/accessible-nodes -> Get user accessible nodes
+GET /api/users/{uuid}/subscription-request-history -> Get user subscription request history, recent 24 records
+GET /api/users/by-short-uuid/{shortUuid} -> Get user by Short UUID
+GET /api/users/by-username/{username} -> Get user by username
+GET /api/users/by-id/{id} -> Get user by ID
+GET /api/users/by-telegram-id/{telegramId} -> Get users by telegram ID
+GET /api/users/by-email/{email} -> Get users by email
+GET /api/users/by-tag/{tag} -> Get users by tag
+POST /api/users/{uuid}/actions/revoke -> Revoke user subscription
+POST /api/users/{uuid}/actions/disable -> Disable user
+POST /api/users/{uuid}/actions/enable -> Enable user
+POST /api/users/{uuid}/actions/reset-traffic -> Reset user traffic
+POST /api/users/bulk/delete-by-status -> Bulk delete users by status
+POST /api/users/bulk/delete -> Bulk delete users by UUIDs
+POST /api/users/bulk/revoke-subscription -> Revoke users subscription by User UUIDs
+POST /api/users/bulk/reset-traffic -> Bulk reset traffic users by UUIDs
+POST /api/users/bulk/update -> Bulk update users by UUIDs
+POST /api/users/bulk/update-squads -> Bulk update users internal squads by UUIDs
+POST /api/users/bulk/extend-expiration-date -> Bulk Extend Users Expiration Date
+POST /api/users/bulk/all/update -> Bulk update all users
+POST /api/users/bulk/all/reset-traffic -> Bulk Reset All Users Traffic
+POST /api/users/bulk/all/extend-expiration-date -> Bulk Extend All Users Expiration Date
+GET /api/sub/{shortUuid}/info -> Get Subscription Info by Short UUID
+GET /api/sub/{shortUuid} -> No summary
+GET /api/sub/{shortUuid}/{clientType} -> No summary
+GET /api/sub/outline/{shortUuid}/{type}/{encodedTag} -> No summary
+GET /api/subscriptions -> Get all subscriptions
+GET /api/subscriptions/by-username/{username} -> Get subscription by username
+GET /api/subscriptions/by-short-uuid/{shortUuid} -> Get subscription by short uuid (protected route)
+GET /api/subscriptions/by-uuid/{uuid} -> Get subscription by uuid
+GET /api/subscriptions/by-short-uuid/{shortUuid}/raw -> Get Raw Subscription by Short UUID
+GET /api/subscriptions/subpage-config/{shortUuid} -> Get Subpage Config by Short UUID
+GET /api/subscription-templates -> Get all subscription templates (wihout content)
+PATCH /api/subscription-templates -> Update subscription template
+POST /api/subscription-templates -> Create subscription template
+GET /api/subscription-templates/{uuid} -> Get subscription template by uuid
+DELETE /api/subscription-templates/{uuid} -> Delete subscription template
+POST /api/subscription-templates/actions/reorder -> Reorder subscription templates
+POST /api/tokens -> Create a new API token
+GET /api/tokens -> Get all API tokens
+DELETE /api/tokens/{uuid} -> Delete an API token by UUID
+GET /api/config-profiles -> Get config profiles
+POST /api/config-profiles -> Create config profile
+PATCH /api/config-profiles -> Update Core Config in specific config profile
+GET /api/config-profiles/inbounds -> Get all inbounds from all config profiles
+GET /api/config-profiles/{uuid}/inbounds -> Get inbounds by profile uuid
+GET /api/config-profiles/{uuid} -> Get config profile by uuid
+DELETE /api/config-profiles/{uuid} -> Delete config profile
+GET /api/config-profiles/{uuid}/computed-config -> Get computed config profile by uuid
+POST /api/config-profiles/actions/reorder -> Reorder config profiles
+GET /api/snippets -> Get snippets
+DELETE /api/snippets -> Delete snippet
+POST /api/snippets -> Create snippet
+PATCH /api/snippets -> Update snippet
+GET /api/internal-squads -> Get all internal squads
+POST /api/internal-squads -> Create internal squad
+PATCH /api/internal-squads -> Update internal squad
+GET /api/internal-squads/{uuid} -> Get internal squad by uuid
+DELETE /api/internal-squads/{uuid} -> Delete internal squad
+GET /api/internal-squads/{uuid}/accessible-nodes -> Get internal squad accessible nodes
+POST /api/internal-squads/{uuid}/bulk-actions/add-users -> Add all users to internal squad
+DELETE /api/internal-squads/{uuid}/bulk-actions/remove-users -> Delete users from internal squad
+POST /api/internal-squads/actions/reorder -> Reorder internal squads
+GET /api/external-squads -> Get all external squads
+POST /api/external-squads -> Create external squad
+PATCH /api/external-squads -> Update external squad
+GET /api/external-squads/{uuid} -> Get external squad by uuid
+DELETE /api/external-squads/{uuid} -> Delete external squad
+POST /api/external-squads/{uuid}/bulk-actions/add-users -> Add all users to external squad
+DELETE /api/external-squads/{uuid}/bulk-actions/remove-users -> Delete users from external squad
+POST /api/external-squads/actions/reorder -> Reorder external squads
+GET /api/keygen -> Get SSL_CERT for Remnawave Node
+GET /api/nodes/tags -> Get all existing nodes tags
+POST /api/nodes -> Create a new node
+GET /api/nodes -> Get all nodes
+PATCH /api/nodes -> Update node
+GET /api/nodes/{uuid} -> Get node by UUID
+DELETE /api/nodes/{uuid} -> Delete a node
+POST /api/nodes/{uuid}/actions/enable -> Enable a node
+POST /api/nodes/{uuid}/actions/disable -> Disable a node
+POST /api/nodes/{uuid}/actions/restart -> Restart node
+POST /api/nodes/{uuid}/actions/reset-traffic -> Reset Node Traffic
+POST /api/nodes/actions/restart-all -> Restart all nodes
+POST /api/nodes/actions/reorder -> Reorder nodes
+POST /api/nodes/bulk-actions/profile-modification -> Modify Inbounds & Profile for many nodes
+POST /api/nodes/bulk-actions -> Perform actions for many nodes
+GET /api/hosts/tags -> Get all existing host tags
+POST /api/hosts -> Create a new host
+PATCH /api/hosts -> Update a host
+GET /api/hosts -> Get all hosts
+GET /api/hosts/{uuid} -> Get a host by UUID
+DELETE /api/hosts/{uuid} -> Delete a host by UUID
+POST /api/hosts/actions/reorder -> Reorder hosts
+POST /api/hosts/bulk/delete -> Delete hosts by UUIDs
+POST /api/hosts/bulk/disable -> Disable hosts by UUIDs
+POST /api/hosts/bulk/enable -> Enable hosts by UUIDs
+POST /api/hosts/bulk/set-inbound -> Set inbound to hosts by UUIDs
+POST /api/hosts/bulk/set-port -> Set port to hosts by UUIDs
+GET /api/bandwidth-stats/nodes/{uuid}/users/legacy -> Get Node User Usage by Range and Node UUID (Legacy)
+GET /api/bandwidth-stats/nodes/realtime -> Get Nodes Realtime Usage
+GET /api/bandwidth-stats/nodes/{uuid}/users -> Get Node Users Usage by Node UUID
+GET /api/bandwidth-stats/users/{uuid}/legacy -> Get User Usage by Range (Legacy)
+GET /api/bandwidth-stats/users/{uuid} -> Get User Usage by Range
+GET /api/hwid/devices -> Get all HWID devices
+POST /api/hwid/devices -> Create a user HWID device
+POST /api/hwid/devices/delete -> Delete a user HWID device
+POST /api/hwid/devices/delete-all -> Delete all user HWID devices
+GET /api/hwid/devices/stats -> Get HWID devices stats
+GET /api/hwid/devices/top-users -> Get top users by HWID devices
+GET /api/hwid/devices/{userUuid} -> Get user HWID devices
+GET /api/bandwidth-stats/nodes -> Get Nodes Usage by Range
+GET /api/infra-billing/providers -> Get all infra providers
+POST /api/infra-billing/providers -> Create infra provider
+PATCH /api/infra-billing/providers -> Update infra provider
+GET /api/infra-billing/providers/{uuid} -> Get infra provider by uuid
+DELETE /api/infra-billing/providers/{uuid} -> Delete infra provider by uuid
+POST /api/infra-billing/history -> Create infra billing history
+GET /api/infra-billing/history -> Get infra billing history
+DELETE /api/infra-billing/history/{uuid} -> Delete infra billing history
+GET /api/infra-billing/nodes -> Get infra billing nodes
+PATCH /api/infra-billing/nodes -> Update infra billing nodes
+POST /api/infra-billing/nodes -> Create infra billing node
+DELETE /api/infra-billing/nodes/{uuid} -> Delete infra billing node
+GET /api/subscription-request-history -> Get all subscription request history
+GET /api/subscription-request-history/stats -> Get subscription request history stats
+GET /api/system/metadata -> Get Remnawave Information
+GET /api/system/stats -> Get Stats
+GET /api/system/stats/bandwidth -> Get Bandwidth Stats
+GET /api/system/stats/nodes -> Get Nodes Statistics
+GET /api/system/health -> Get Remnawave Health
+GET /api/system/nodes/metrics -> Get Nodes Metrics
+GET /api/system/tools/x25519/generate -> Generate 30 X25519 keypairs
+POST /api/system/tools/happ/encrypt -> Encrypt Happ Crypto Link
+POST /api/system/testers/srr-matcher -> Test SRR Matcher
+GET /api/subscription-settings -> Get subscription settings
+PATCH /api/subscription-settings -> Update subscription settings
