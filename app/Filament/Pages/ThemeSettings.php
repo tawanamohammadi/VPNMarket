@@ -76,6 +76,7 @@ class ThemeSettings extends Page implements HasForms
                             Select::make('active_theme')->label('قالب اصلی سایت')->options([
                                 'welcome' => 'قالب خوش‌آمدگویی',
                                 'rocket' => 'قالب RoketVPN (موشکی)',
+                                'panbehnet' => 'قالب پیشرفته پنبه‌نت (Glassmorphism)',
                             ])->default('welcome')->live(),
                             Select::make('active_auth_theme')->label('قالب صفحات ورود/ثبت‌نام')->options([
                                 'default' => 'قالب پیش‌فرض (Breeze)',
