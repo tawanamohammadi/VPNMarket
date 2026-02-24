@@ -818,8 +818,7 @@ class WebhookController extends Controller
                     $order->update(['card_payment_receipt' => $fileName]);
                     $user->update(['bot_state' => null]);
 
-                    $successMessage = "✅ *رسید مالی شما با موفقیت پردازش و در سیستم ثبت شد.*\n";
-                    $successMessage .= "━━━━━━━━━━━━━━━\n\n";
+                    $successMessage = "✅ *رسید مالی شما با موفقیت پردازش و در سیستم ثبت شد.*\n\n";
                     $successMessage .= $this->escape("⏳ در حال حاضر تاییدیه مالی شما در صف انتظار بررسی توسط کارشناسان پشتیبانی (ادمین) قرار گرفته است.") . "\n";
                     $successMessage .= $this->escape("معمولاً این فرآیند وابسته به حجم درخواست‌ها بین چند دقیقه تا نهایتاً یک ساعت زمان می‌برد.") . "\n\n";
                     
@@ -832,7 +831,6 @@ class WebhookController extends Controller
                     $successMessage .= "🎁 *پیشنهاد ویژه (اتصال موقت):*\n";
                     $successMessage .= $this->escape("تا زمان تایید شدن رسید، می‌توانید از دکمه «تست رایگان» در منوی اصلی استفاده کنید تا کانکشن شما حتی برای ۱ دقیقه هم قطع نشود!") . "\n\n";
                     
-                    $successMessage .= "━━━━━━ ❖ ━━━━━━\n";
                     $successMessage .= "📢 " . $this->escape("کانال:") . " [PanbehNet](https://t.me/panbehnet) \\| 👨🏻‍💻 " . $this->escape("پشتیبانی:") . " [PanbeHelp](https://t.me/PanbeHelp)\n";
 
                     Telegram::sendMessage([
@@ -1309,8 +1307,7 @@ class WebhookController extends Controller
 
             $durations = $activePlans->pluck('duration_days')->unique()->sort();
 
-            $message = "🛒 *فروشگاه اینترنت آزاد*\n";
-            $message .= "━━━━━━━━━━━━━━━\n\n";
+            $message = "🛒 *فروشگاه اینترنت آزاد*\n\n";
             $message .= $this->escape("به ترمینال تهیه اشتراک خوش‌آمدید. ما اینجا هستیم تا تحریم‌ها و محدودیت‌ها را دور بزنیم.") . "\n\n";
             $message .= "👇 " . $this->escape("لطفاً بازه زمانی مورد نیاز خود را برای سفر در اینترنتِ آزاد انتخاب کنید:") . "\n";
 
@@ -1375,17 +1372,14 @@ class WebhookController extends Controller
             }
 
             $durationLabel = $plans->first()->duration_label ?? "{$durationDays} روزه";
-            $message = "💎 *سرویس‌های {$durationLabel}*\n";
-            $message .= "━━━━━━━━━━━━━━━\n\n";
+            $message = "💎 *سرویس‌های {$durationLabel}*\n\n";
 
             foreach ($plans as $index => $plan) {
                 $statusIcon = '✅';
                 $message .= "{$statusIcon} *" . $this->escape($plan->name) . "*\n";
-                $message .= "   📦 " . $this->escape($plan->volume_gb . ' گیگابایت') . "\n";
-                $message .= "   💳 " . $this->escape(number_format($plan->price) . ' تومان') . "\n";
-                $message .= "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n";
+                $message .= "   📦 " . $this->escape($plan->volume_gb . ' گیگابایت') . " | 💳 " . $this->escape(number_format($plan->price) . ' تومان') . "\n\n";
             }
-            $message .= "\n👇 پلن مورد نظر را انتخاب کنید:";
+            $message .= "👇 پلن مورد نظر را انتخاب کنید:";
 
             $keyboard = Keyboard::make()->inline();
 
@@ -1610,8 +1604,7 @@ class WebhookController extends Controller
             return;
         }
 
-    $message = "🎛 *کنترل‌پنل سرویس‌های شما*\n";
-    $message .= "━━━━━━━━━━━━━━━\n\n";
+    $message = "🎛 *کنترل‌پنل سرویس‌های شما*\n\n";
     $message .= $this->escape("اینجا مرکز فرماندهی شماست. وضعیت اتصال و تاریخ انقضای سرویس‌های خود را بررسی کنید.") . "\n\n";
     $message .= $this->escape("👇 روی هر کانکشن کلیک کنید تا جزئیات و راه‌های اتصال آن نمایش داده شود:") . "\n";
 
@@ -1704,13 +1697,12 @@ class WebhookController extends Controller
         }
 
         $message = "☁️ *سرویس ابری اختصاصی پنبه‌نت*\n\n";
-        $message .= "╭─《 *مشخصات اتصال و شبکه* 》─\n";
-        $message .= "├ 🎫 *شناسه:* `" . $this->escapeCode($panelUsername) . "`\n";
-        $message .= "├ 🌍 *موقعیت سرور:* {$locationFlag} " . $this->escape($locationName) . "\n";
-        $message .= "├ 🎚 *طرح اشتراک:* " . $this->escape($order->plan->name) . "\n";
-        $message .= "├ 📦 *ترافیک کل:* `" . $this->escape($order->plan->volume_gb) . "` " . $this->escape("گیگابایت") . "\n";
-        $message .= "╰ ⏳ *زمان باقی‌مانده:* " . $remainingText . "\n";
-        $message .= "\n";
+        $message .= "🎫 *شناسه:* `" . $this->escapeCode($panelUsername) . "`\n";
+        $message .= "🌍 *موقعیت سرور:* {$locationFlag} " . $this->escape($locationName) . "\n";
+        $message .= "🎚 *طرح اشتراک:* " . $this->escape($order->plan->name) . "\n";
+        $message .= "📦 *ترافیک کل:* `" . $this->escape($order->plan->volume_gb) . "` " . $this->escape("گیگابایت") . "\n";
+        $message .= "⏳ *زمان باقی‌مانده:* " . $remainingText . "\n";
+        $message .= "\n\n";
         
         if (!empty($order->config_details)) {
             // فقط گرفتن خود لینک (حذف هرگونه کاراکتر اضافه) برای کپی تمیز
@@ -1720,11 +1712,9 @@ class WebhookController extends Controller
                  $pureUrl = trim($order->config_details);
             }
             
-            $message .= "━━━━━━ ❖ ━━━━━━\n";
             $message .= "🎯 *مسیر اتصالِ شما \\(لمس برای کپی\\):*\n";
             $message .= "`" . $this->escapeCode($pureUrl) . "`\n\n";
-            $message .= "💡 *" . $this->escape("راهنما:") . "* " . $this->escape("لینک بالا را کپی کرده و در برنامه V2Box (آیفون) یا v2rayNG (اندروید) اضافه کنید.") . "\n";
-            $message .= "━━━━━━ ❖ ━━━━━━\n";
+            $message .= "💡 *" . $this->escape("راهنما:") . "* " . $this->escape("لینک بالا را کپی کرده و در برنامه V2Box (آیفون) یا v2rayNG (اندروید) اضافه کنید.") . "\n\n";
             $message .= "📢 " . $this->escape("کانال:") . " [PanbehNet](https://t.me/panbehnet) \\| 👨🏻‍💻 " . $this->escape("پشتیبانی:") . " [PanbeHelp](https://t.me/PanbeHelp)\n";
         } else {
             $message .= "⏳ " . $this->escape("در حال آماده‌سازی کانفیگ...");
@@ -1811,19 +1801,16 @@ class WebhookController extends Controller
 
         // متن کپشن (مشابه showServiceDetails)
         $caption = "☁️ *سرویس ابری اختصاصی پنبه‌نت*\n\n";
-        $caption .= "╭─《 *مشخصات اتصال و شبکه* 》─\n";
-        $caption .= "├ 🎫 *شناسه:* `" . $this->escapeCode($panelUsername) . "`\n";
-        $caption .= "├ 🌍 *موقعیت سرور:* {$locationFlag} " . $this->escape($locationName) . "\n";
-        $caption .= "├ 🎚 *طرح اشتراک:* " . $this->escape($order->plan->name) . "\n";
-        $caption .= "├ 📦 *ترافیک کل:* `" . $this->escape($order->plan->volume_gb) . "` " . $this->escape("گیگابایت") . "\n";
-        $caption .= "╰ ⏳ *زمان باقی‌مانده:* " . $remainingText . "\n";
-        $caption .= "\n";
+        $caption .= "🎫 *شناسه:* `" . $this->escapeCode($panelUsername) . "`\n";
+        $caption .= "🌍 *موقعیت سرور:* {$locationFlag} " . $this->escape($locationName) . "\n";
+        $caption .= "🎚 *طرح اشتراک:* " . $this->escape($order->plan->name) . "\n";
+        $caption .= "📦 *ترافیک کل:* `" . $this->escape($order->plan->volume_gb) . "` " . $this->escape("گیگابایت") . "\n";
+        $caption .= "⏳ *زمان باقی‌مانده:* " . $remainingText . "\n";
+        $caption .= "\n\n";
         
-        $caption .= "━━━━━━ ❖ ━━━━━━\n";
         $caption .= "🎯 *مسیر اتصالِ شما \\(لمس برای کپی\\):*\n";
         $caption .= "`" . $this->escapeCode($pureUrl) . "`\n\n";
-        $caption .= "💡 *" . $this->escape("راهنما:") . "* " . $this->escape("لینک بالا را کپی کرده و در برنامه V2Box (آیفون) یا v2rayNG (اندروید) اضافه کنید.") . "\n";
-        $caption .= "━━━━━━ ❖ ━━━━━━\n";
+        $caption .= "💡 *" . $this->escape("راهنما:") . "* " . $this->escape("لینک بالا را کپی کرده و در برنامه V2Box (آیفون) یا v2rayNG (اندروید) اضافه کنید.") . "\n\n";
         $caption .= "📢 " . $this->escape("کانال:") . " [PanbehNet](https://t.me/panbehnet) \\| 👨🏻‍💻 " . $this->escape("پشتیبانی:") . " [PanbeHelp](https://t.me/PanbeHelp)\n";
 
         // کیبورد
@@ -1894,8 +1881,7 @@ class WebhookController extends Controller
     protected function sendWalletMenu($user, $messageId = null)
     {
         $balance = number_format($user->balance ?? 0);
-        $message = "💳 *پایگاه مالی شما (کیف‌پول)*\n";
-        $message .= "━━━━━━━━━━━━━━━\n\n";
+        $message = "💳 *پایگاه مالی شما (کیف‌پول)*\n\n";
         $message .= "💰 موجودی فعلی: *" . $this->escape($balance . ' تومان') . "*\n\n";
         $message .= $this->escape("بدون درگیری مداوم با درگاه‌های بانکی و قطعی اینترنت، کیف‌پول خود را یک‌بار شارژ کنید و اشتراک‌های خود را با یک کلیک تمدید کنید. زمان شما ارزشمندتر از مراحل پرداخت است! ⚡️") . "\n";
 
@@ -1929,8 +1915,7 @@ class WebhookController extends Controller
         $referrerReward = number_format((int) $this->settings->get('referral_referrer_reward', 0));
         $referralCount = $user->referrals()->count();
 
-        $message = "🤝 *اکوسیستم همکاری و درآمدزایی*\n";
-        $message .= "〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n\n";
+        $message = "🤝 *اکوسیستم همکاری و درآمدزایی*\n\n";
         $message .= "🎯 *آزادی را هدیه بده، سودش را ببر!*\n";
         $message .= $this->escape("کافیست لینک زیر را برای دوستان و آشنایان خود بفرستید. هر کاربری که با لینک شما وارد شود و اشتراک تهیه کند، سهمِ قابل‌توجهی از مبلغ مستقیماً به عنوان حق‌الزحمه بازاریابی به کیف‌پول شما واریز می‌شود. یک رابطه برابری برای گسترش آزادی شبکه.") . "\n\n";
         
@@ -1954,8 +1939,7 @@ class WebhookController extends Controller
     {
         $transactions = $user->transactions()->with('order.plan')->latest()->take(10)->get();
 
-        $message = "🧾 *گزارش تراکنش‌های مالی*\n";
-        $message .= "〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n\n";
+        $message = "🧾 *گزارش تراکنش‌های مالی*\n\n";
 
         if ($transactions->isEmpty()) {
             $message .= $this->escape("تاکنون هیچ گردش مالی در سیستم برای شما ثبت نشده است.");
@@ -2883,8 +2867,7 @@ class WebhookController extends Controller
     protected function showSupportMenu($user, $messageId = null)
     {
         $tickets = $user->tickets()->latest()->take(5)->get();
-        $message = "👨🏻‍💻 *مرکز پشتیبانی VIP پنبه‌نت*\n";
-        $message .= "━━━━━━━━━━━━━━━\n\n";
+        $message = "👨🏻‍💻 *مرکز پشتیبانی VIP پنبه‌نت*\n\n";
         $message .= $this->escape("تیم متخصصین فنی ما آماده پاسخگویی و رفع سریع چالش‌های شما هستند. تعهد ما قطعی صفر و لبخند شماست.") . "\n\n";
         if ($tickets->isEmpty()) {
             $message .= "🍃 " . $this->escape("در حال حاضر هیچ مکاتبه‌ای (تیکت) از سوی شما در سیستم ثبت نشده است.");
@@ -3557,17 +3540,14 @@ class WebhookController extends Controller
                      // ساخت پیام کامل با ظاهر پریمیوم
                     $message = "☁️ *پنبه‌نت \\| اینترنت بدون مرز*\n\n";
                     $message .= "🎁 *" . $this->escape("سرویس هدیه و تست اختصاصی شما متصل شد!") . "*\n\n";
-                    $message .= "╭─《 *جزئیات اتصال سرور* 》─\n";
-                    $message .= "├ 👤 *نام کاربری:* `" . $this->escapeCode($uniqueUsername) . "`\n";
-                    $message .= "├ 🌍 *موقعیت سرور:* {$locationFlag} " . $this->escape($locationName) . "\n";
-                    $message .= "├ 📦 *حجم مجاز:* `" . $this->escape($volumeMB) . "` " . $this->escape("مگابایت") . "\n";
-                    $message .= "╰ ⏳ *زمان اعتبار:* `" . $this->escape($durationHours) . "` " . $this->escape("ساعت") . "\n";
-                    $message .= "\n";
-                    $message .= "━━━━━━ ❖ ━━━━━━\n";
+                    $message .= "👤 *نام کاربری:* `" . $this->escapeCode($uniqueUsername) . "`\n";
+                    $message .= "🌍 *موقعیت سرور:* {$locationFlag} " . $this->escape($locationName) . "\n";
+                    $message .= "📦 *حجم مجاز:* `" . $this->escape($volumeMB) . "` " . $this->escape("مگابایت") . "\n";
+                    $message .= "⏳ *زمان اعتبار:* `" . $this->escape($durationHours) . "` " . $this->escape("ساعت") . "\n";
+                    $message .= "\n\n";
                     $message .= "🎯 *لینک اتصال یک‌بار مصرف \\(کپی با یک لمس\\):*\n";
                     $message .= "`" . $this->escapeCode($pureUrl) . "`\n\n";
-                    $message .= "💡 *" . $this->escape("راهنما:") . "* " . $this->escape("این لینک را در برنامه V2Box (آیفون) یا v2rayNG (اندروید) Paste کنید.") . "\n";
-                    $message .= "━━━━━━ ❖ ━━━━━━\n";
+                    $message .= "💡 *" . $this->escape("راهنما:") . "* " . $this->escape("این لینک را در برنامه V2Box (آیفون) یا v2rayNG (اندروید) Paste کنید.") . "\n\n";
                     $message .= "📢 " . $this->escape("کانال:") . " [PanbehNet](https://t.me/panbehnet) \\| 👨🏻‍💻 " . $this->escape("پشتیبانی:") . " [PanbeHelp](https://t.me/PanbeHelp)\n";
 
                     // کیبورد با دکمه کپی و QR
