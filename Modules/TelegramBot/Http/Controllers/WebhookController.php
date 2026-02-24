@@ -1716,12 +1716,12 @@ class WebhookController extends Controller
         }
 
         $keyboard->row([
-            Keyboard::inlineButton(['text' => "🔄 تمدید اشتراک", 'callback_data' => "renew_order_{$order->id}"])
+            Keyboard::inlineButton(['text' => "🔄 تمدید اشتراک", 'callback_data' => "renew_order_{$order->id}", 'style' => 'primary'])
         ]);
 
         $keyboard->row([
-            Keyboard::inlineButton(['text' => '⬅️ بازگشت به لیست سرویس‌ها', 'callback_data' => '/my_services']),
-            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+            Keyboard::inlineButton(['text' => '⬅️ بازگشت به لیست سرویس‌ها', 'callback_data' => '/my_services', 'style' => 'secondary']),
+            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start', 'style' => 'secondary'])
         ]);
 
         $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
@@ -1805,12 +1805,12 @@ class WebhookController extends Controller
         // کیبورد
         $keyboard = Keyboard::make()->inline();
         $keyboard->row([
-            Keyboard::inlineButton(['text' => "📋 کپی لینک", 'callback_data' => "copy_link_{$order->id}"]),
-            Keyboard::inlineButton(['text' => "🔄 تمدید اشتراک", 'callback_data' => "renew_order_{$order->id}"])
+            Keyboard::inlineButton(['text' => "📋 کپی لینک", 'callback_data' => "copy_link_{$order->id}", 'style' => 'primary']),
+            Keyboard::inlineButton(['text' => "🔄 تمدید اشتراک", 'callback_data' => "renew_order_{$order->id}", 'style' => 'success'])
         ]);
         $keyboard->row([
-            Keyboard::inlineButton(['text' => '⬅️ بازگشت به لیست سرویس‌ها', 'callback_data' => '/my_services']),
-            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+            Keyboard::inlineButton(['text' => '⬅️ بازگشت به لیست سرویس‌ها', 'callback_data' => '/my_services', 'style' => 'secondary']),
+            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start', 'style' => 'secondary'])
         ]);
 
         // تولید و ارسال QR
@@ -2879,16 +2879,16 @@ class WebhookController extends Controller
             }
         }
 
-        $keyboard = Keyboard::make()->inline()->row([Keyboard::inlineButton(['text' => '📝 ایجاد تیکت جدید', 'callback_data' => '/support_new'])]);
+        $keyboard = Keyboard::make()->inline()->row([Keyboard::inlineButton(['text' => '📝 ایجاد تیکت جدید', 'callback_data' => '/support_new', 'style' => 'primary'])]);
         foreach ($tickets as $ticket) {
             if ($ticket->status !== 'closed') {
                 $keyboard->row([
-                    Keyboard::inlineButton(['text' => "✏️ پاسخ/مشاهده تیکت #{$ticket->id}", 'callback_data' => "reply_ticket_{$ticket->id}"]),
-                    Keyboard::inlineButton(['text' => "❌ بستن تیکت #{$ticket->id}", 'callback_data' => "close_ticket_{$ticket->id}"]),
+                    Keyboard::inlineButton(['text' => "✏️ پاسخ/مشاهده تیکت #{$ticket->id}", 'callback_data' => "reply_ticket_{$ticket->id}", 'style' => 'success']),
+                    Keyboard::inlineButton(['text' => "❌ بستن تیکت #{$ticket->id}", 'callback_data' => "close_ticket_{$ticket->id}", 'style' => 'danger']),
                 ]);
             }
         }
-        $keyboard->row([Keyboard::inlineButton(['text' => '⬅️ بازگشت به منوی اصلی', 'callback_data' => '/start'])]);
+        $keyboard->row([Keyboard::inlineButton(['text' => '⬅️ بازگشت به منوی اصلی', 'callback_data' => '/start', 'style' => 'secondary'])]);
         $this->sendOrEditMessage($user->telegram_chat_id, $message, $keyboard, $messageId);
     }
 
@@ -3549,12 +3549,12 @@ class WebhookController extends Controller
                     // کیبورد با دکمه کپی و QR
                     $keyboard = Keyboard::make()->inline()
                         ->row([
-                            Keyboard::inlineButton(['text' => '📋 لینک کپی سریع', 'callback_data' => "copy_trial_link_{$user->id}"]),
-                            Keyboard::inlineButton(['text' => '📱 QR Code مجدد', 'callback_data' => "qr_trial_{$user->id}"])
+                            Keyboard::inlineButton(['text' => '📋 لینک کپی سریع', 'callback_data' => "copy_trial_link_{$user->id}", 'style' => 'primary']),
+                            Keyboard::inlineButton(['text' => '📱 QR Code مجدد', 'callback_data' => "qr_trial_{$user->id}", 'style' => 'secondary'])
                         ])
                         ->row([
-                            Keyboard::inlineButton(['text' => '🛒 خرید سرویس دائمی', 'callback_data' => '/plans']),
-                            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start'])
+                            Keyboard::inlineButton(['text' => '🛒 خرید سرویس دائمی', 'callback_data' => '/plans', 'style' => 'success']),
+                            Keyboard::inlineButton(['text' => '🏠 منوی اصلی', 'callback_data' => '/start', 'style' => 'secondary'])
                         ]);
 
                     // تولید QR Code به صورت خودکار
