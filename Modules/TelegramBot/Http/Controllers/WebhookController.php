@@ -812,12 +812,26 @@ class WebhookController extends Controller
                     $order->update(['card_payment_receipt' => $fileName]);
                     $user->update(['bot_state' => null]);
 
+                    $successMessage = "✅ *رسید مالی شما با موفقیت پردازش و در سیستم ثبت شد.*\n";
+                    $successMessage .= "━━━━━━━━━━━━━━━\n\n";
+                    $successMessage .= $this->escape("⏳ در حال حاضر تاییدیه مالی شما در صف انتظار بررسی توسط کارشناسان پشتیبانی (ادمین) قرار گرفته است.") . "\n";
+                    $successMessage .= $this->escape("معمولاً این فرآیند وابسته به حجم درخواست‌ها بین چند دقیقه تا نهایتاً یک ساعت زمان می‌برد.") . "\n\n";
+                    
+                    $successMessage .= "💡 *پس از تایید چه اتفاقی می‌افتد؟*\n";
+                    $successMessage .= $this->escape("به محض تایید رسید، سرویس شما به طور خودکار آماده شده و پیام حاوی کانفیگ‌ها در همین ربات برای شما ارسال خواهد شد.") . "\n\n";
+                    
+                    $successMessage .= "📚 *تا آن زمان چه کنیم؟*\n";
+                    $successMessage .= $this->escape("اگر با نحوه اتصال آشنایی ندارید، از بخش آموزش‌های اتصال، برنامه‌های لازم را دانلود کرده و آموزش‌ها را مشاهده کنید تا به محض دریافت اشتراک، سریعاً متصل شوید.") . "\n\n";
+                    
+                    $successMessage .= "━━━━━━ ❖ ━━━━━━\n";
+                    $successMessage .= "📢 " . $this->escape("کانال:") . " [PanbehNet](https://t.me/panbehnet) \\| 👨🏻‍💻 " . $this->escape("پشتیبانی:") . " [PanbeHelp](https://t.me/PanbeHelp)\n";
+
                     Telegram::sendMessage([
                         'chat_id' => $chatId,
-                        'text' => $this->escape("✅ رسید شما با موفقیت ثبت شد. پس از بررسی توسط ادمین، نتیجه به شما اطلاع داده خواهد شد."),
+                        'text' => $successMessage,
                         'parse_mode' => 'MarkdownV2',
                     ]);
-                    $this->sendOrEditMainMenu($chatId, $this->escape("چه کار دیگری برایتان انجام دهم?"));
+                    $this->sendOrEditMainMenu($chatId, $this->escape("به محض تایید، به شما اطلاع می‌دهیم. اقدام دیگری مدنظرتان است؟"));
 
                     $adminChatId = $this->settings->get('telegram_admin_chat_id');
                     if ($adminChatId && is_numeric($adminChatId)) {
