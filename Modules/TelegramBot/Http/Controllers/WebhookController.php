@@ -1679,7 +1679,7 @@ class WebhookController extends Controller
              $locationName = 'سرویس Eagle';
         }
 
-        $message = "☁️ *پنبه‌نت | گذر آزاد*\n\n";
+        $message = "☁️ *پنبه‌نت \\| گذر آزاد*\n\n";
         $message .= "\> 🎫 *شناسه سرویس:* `" . $this->escapeCode($panelUsername) . "`\n";
         $message .= "\> 🌍 *موقعیت:* {$locationFlag} " . $this->escape($locationName) . "\n";
         $message .= "\>\n";
@@ -1784,7 +1784,7 @@ class WebhookController extends Controller
         }
 
         // متن کپشن (مشابه showServiceDetails)
-        $caption = "☁️ *پنبه‌نت | گذر آزاد*\n\n";
+        $caption = "☁️ *پنبه‌نت \\| گذر آزاد*\n\n";
         $caption .= "\> 🎫 *شناسه سرویس:* `" . $this->escapeCode($panelUsername) . "`\n";
         $caption .= "\> 🌍 *موقعیت:* {$locationFlag} " . $this->escape($locationName) . "\n";
         $caption .= "\>\n";
@@ -2869,7 +2869,7 @@ class WebhookController extends Controller
                     default => '⚪️ نامشخص',
                 };
                 $ticketIdEscaped = $ticket->id;
-                $message .= "\n📌 *تیکت \\#{$ticketIdEscaped}* | " . $this->escape($status) . "\n";
+                $message .= "\n📌 *تیکت \\#{$ticketIdEscaped}* \\| " . $this->escape($status) . "\n";
                 $message .= "*موضوع:* " . $this->escape($ticket->subject) . "\n";
                 $message .= "_{$this->escape($ticket->updated_at->diffForHumans())}_";
             }
@@ -3526,8 +3526,8 @@ class WebhookController extends Controller
                     }
 
                      // ساخت پیام کامل با ظاهر پریمیوم
-                    $message = "☁️ *پنبه‌نت | گذر آزاد*\n\n";
-                    $message .= "\> 🧪 *طعمِ گذرِ آزاد رو بچش!*\n";
+                    $message = "☁️ *پنبه‌نت \\| گذر آزاد*\n\n";
+                    $message .= "\> 🧪 *طعمِ گذرِ آزاد رو بچش\\!*\n";
                     $message .= "\> " . $this->escape("اکانت تست شما با بالاترین سرعتِ ممکن فعال شد. بفرما... اینم بلیطِ یک‌طرفه به اینترنتِ بدون فیلتر. فقط یادت باشه این یه دست‌گرمیه! 😉") . "\n";
                     $message .= "\>\n";
                     $message .= "\> 👤 *نام کاربری:* `" . $this->escapeCode($uniqueUsername) . "`\n";
