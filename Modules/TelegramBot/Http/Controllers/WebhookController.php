@@ -298,21 +298,21 @@ class WebhookController extends Controller
 
         Log::info("HTM_SWITCH_START", ['normalized' => $normalizedText]);
 
-        if (str_contains($normalizedText, 'خریدسرویس')) {
+        if (str_contains($normalizedText, 'تهیهاشتراک') || str_contains($normalizedText, 'خریدسرویس')) {
             $this->sendPlans($chatId);
         } elseif (str_contains($normalizedText, 'سرویسهایمن') || str_contains($normalizedText, 'سرویس‌هایمن')) {
             $this->sendMyServices($user);
         } elseif (str_contains($normalizedText, 'کیفپول')) {
             $this->sendWalletMenu($user);
-        } elseif (str_contains($normalizedText, 'تاریخچهتراکنش')) {
+        } elseif (str_contains($normalizedText, 'تراکنش')) {
             $this->sendTransactions($user);
         } elseif (str_contains($normalizedText, 'پشتیبانی')) {
             $this->showSupportMenu($user);
-        } elseif (str_contains($normalizedText, 'دعوتازدوس')) {
+        } elseif (str_contains($normalizedText, 'کسبدرآمد') || str_contains($normalizedText, 'دعوتازدوس')) {
             $this->sendReferralMenu($user);
-        } elseif (str_contains($normalizedText, 'راهنمایاتصال')) {
+        } elseif (str_contains($normalizedText, 'آموزشاتصال') || str_contains($normalizedText, 'راهنمایاتصال')) {
             $this->sendTutorialsMenu($chatId);
-        } elseif (str_contains($normalizedText, 'اکانتتست')) {
+        } elseif (str_contains($normalizedText, 'تسترایگان') || str_contains($normalizedText, 'اکانتتست')) {
             $telegramUsername = $message->getFrom()->getUsername();
             $this->handleTrialRequest($user, $telegramUsername);
         } elseif ($text === '/start') {
@@ -1286,10 +1286,10 @@ class WebhookController extends Controller
 
             $durations = $activePlans->pluck('duration_days')->unique()->sort();
 
-            $message = "🛒 *انتخاب سرویس VPN*\n";
+            $message = "🛒 *فروشگاه اینترنت آزاد*\n";
             $message .= "━━━━━━━━━━━━━━━\n\n";
-            $message .= "لطفاً مدت‌زمان سرویس مورد نظر را انتخاب کنید:\n\n";
-            $message .= "👇 یکی از گزینه‌های زیر را انتخاب کنید:";
+            $message .= $this->escape("به ترمینال تهیه اشتراک خوش‌آمدید. ما اینجا هستیم تا تحریم‌ها و محدودیت‌ها را دور بزنیم.") . "\n\n";
+            $message .= "👇 " . $this->escape("لطفاً بازه زمانی مورد نیاز خود را برای سفر در اینترنتِ آزاد انتخاب کنید:") . "\n";
 
             $keyboard = Keyboard::make()->inline();
 
@@ -1587,9 +1587,10 @@ class WebhookController extends Controller
             return;
         }
 
-    $message = "🛠 *سرویس‌های شما*\n";
+    $message = "🎛 *کنترل‌پنل سرویس‌های شما*\n";
     $message .= "━━━━━━━━━━━━━━━\n\n";
-    $message .= $this->escape("لطفاً یک سرویس را برای مشاهده جزئیات انتخاب کنید:") . "\n";
+    $message .= $this->escape("اینجا مرکز فرماندهی شماست. وضعیت اتصال و تاریخ انقضای سرویس‌های خود را بررسی کنید.") . "\n\n";
+    $message .= $this->escape("👇 روی هر کانکشن کلیک کنید تا جزئیات و راه‌های اتصال آن نمایش داده شود:") . "\n";
 
     $keyboard = Keyboard::make()->inline();
     $validServicesCount = 0;
@@ -1870,10 +1871,10 @@ class WebhookController extends Controller
     protected function sendWalletMenu($user, $messageId = null)
     {
         $balance = number_format($user->balance ?? 0);
-        $message = "💳 *صندوقچهٔ پنبه‌نت*\n";
+        $message = "💳 *پایگاه مالی شما (کیف‌پول)*\n";
         $message .= "━━━━━━━━━━━━━━━\n\n";
         $message .= "💰 موجودی فعلی: *" . $this->escape($balance . ' تومان') . "*\n\n";
-        $message .= $this->escape("با شارژ کیف‌پولت، اشتراکت رو توی چند ثانیه و بدون معطلیِ درگاه بانکی تمدید کن! سریع و بی‌دردسر. ⚡️") . "\n";
+        $message .= $this->escape("بدون درگیری مداوم با درگاه‌های بانکی و قطعی اینترنت، کیف‌پول خود را یک‌بار شارژ کنید و اشتراک‌های خود را با یک کلیک تمدید کنید. زمان شما ارزشمندتر از مراحل پرداخت است! ⚡️") . "\n";
 
         $keyboard = Keyboard::make()->inline()
             ->row([
@@ -1905,10 +1906,10 @@ class WebhookController extends Controller
         $referrerReward = number_format((int) $this->settings->get('referral_referrer_reward', 0));
         $referralCount = $user->referrals()->count();
 
-        $message = "🤝 *طرح دعوت از دوستان*\n";
+        $message = "🤝 *اکوسیستم همکاری و درآمدزایی*\n";
         $message .= "〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n\n";
-        $message .= "🎯 *یک بازی برد - برد!*\n";
-        $message .= $this->escape("لینک زیر را برای دوستان خود بفرستید. با هر خریدی که آنها انجام دهند، پاداش نقدی مستقیماً به کیف پول شما واریز می‌شود.") . "\n\n";
+        $message .= "🎯 *آزادی را هدیه بده، سودش را ببر!*\n";
+        $message .= $this->escape("کافیست لینک زیر را برای دوستان و آشنایان خود بفرستید. هر کاربری که با لینک شما وارد شود و اشتراک تهیه کند، سهمِ قابل‌توجهی از مبلغ مستقیماً به عنوان حق‌الزحمه بازاریابی به کیف‌پول شما واریز می‌شود. یک رابطه برابری برای گسترش آزادی شبکه.") . "\n\n";
         
         $message .= "🎁 *ارزش پاداش هر دعوت موفق:*\n";
         $message .= "▫️ `" . $this->escape($referrerReward) . "` *" . $this->escape("تومان") . "*\n\n";
@@ -1930,11 +1931,11 @@ class WebhookController extends Controller
     {
         $transactions = $user->transactions()->with('order.plan')->latest()->take(10)->get();
 
-        $message = "🧾 *تاریخچه تراکنش‌های شما*\n";
+        $message = "🧾 *گزارش تراکنش‌های مالی*\n";
         $message .= "〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n\n";
 
         if ($transactions->isEmpty()) {
-            $message .= $this->escape("شما تاکنون هیچ تراکنشی ثبت نکرده‌اید.");
+            $message .= $this->escape("تاکنون هیچ گردش مالی در سیستم برای شما ثبت نشده است.");
         } else {
             foreach ($transactions as $transaction) {
                 $type = 'نامشخص';
@@ -3651,16 +3652,16 @@ class WebhookController extends Controller
     {
         return Keyboard::make()->inline()
             ->row([
-                Keyboard::inlineButton(['text' => '🟢  خـریـد سـرویـس  🟢', 'callback_data' => '/plans']),
-                Keyboard::inlineButton(['text' => '🛍  سـرویـس‌هـای مـن  🛍', 'callback_data' => '/my_services']),
+                Keyboard::inlineButton(['text' => '🛒  تهیه اشتراک جدید', 'callback_data' => '/plans']),
+                Keyboard::inlineButton(['text' => '🎛  سرویس‌های من', 'callback_data' => '/my_services']),
             ])
             ->row([
-                Keyboard::inlineButton(['text' => '💳  کـیـف پـول  💳', 'callback_data' => '/wallet']),
-                Keyboard::inlineButton(['text' => '🎁  دعـوت از دوسـتـان  🎁', 'callback_data' => '/referral']),
+                Keyboard::inlineButton(['text' => '💳  کیف پول و مالی', 'callback_data' => '/wallet']),
+                Keyboard::inlineButton(['text' => '🎁  کسب درآمد', 'callback_data' => '/referral']),
             ])
             ->row([
-                Keyboard::inlineButton(['text' => '💬  پـشـتـیـبـانـی  💬', 'callback_data' => '/support_menu']),
-                Keyboard::inlineButton(['text' => '📚  راهـنـمـای اتـصـال  📚', 'callback_data' => '/tutorials']),
+                Keyboard::inlineButton(['text' => '👨🏻‍💻  پشتیبانی VIP', 'callback_data' => '/support_menu']),
+                Keyboard::inlineButton(['text' => '📚  آموزش اتصال', 'callback_data' => '/tutorials']),
             ]);
     }
 
@@ -3685,10 +3686,10 @@ class WebhookController extends Controller
         }
 
         $keyboard = [
-            ['🟢  خـریـد سـرویـس  🟢', '🛍  سـرویـس‌هـای مـن  🛍'],
-            ['💳  کـیـف پـول  💳', '🧾  تـاریـخـچـه تـراکـنـش‌هـا  🧾'],
-            ['💬  پـشـتـیـبـانـی  💬', '🎁  دعـوت از دوسـتـان  🎁'],
-            ['📚  راهـنـمـای اتـصـال  📚', '🧪  اکـانـت تـسـت  🧪'],
+            ['🛒  تهیه اشتراک جدید', '🎛  سرویس‌های من'],
+            ['💳  کیف پول و مالی', '🧾  تراکنش‌ها'],
+            ['👨🏻‍💻  پشتیبانی VIP', '🎁  کسب درآمد'],
+            ['📚  آموزش اتصال', '🧪  تست رایگان'],
         ];
 
         if ($webAppUrl) {
