@@ -164,8 +164,7 @@ class OrderResource extends Resource
                                 } elseif ($panelType === 'remnawave') {
                                     $remnawaveService = new RemnawaveService(
                                         (string) $settings->get('remnawave_host'),
-                                        (string) $settings->get('remnawave_username'),
-                                        (string) $settings->get('remnawave_password'),
+                                        (string) $settings->get('remnawave_api_token'),
                                         (string) $settings->get('remnawave_node_hostname')
                                     );
 

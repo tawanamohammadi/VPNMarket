@@ -9,53 +9,33 @@ use Illuminate\Support\Carbon;
 class RemnawaveService
 {
     protected string $baseUrl;
-    protected string $username;
-    protected string $password;
     protected string $nodeHostname;
     protected ?string $accessToken = null;
 
-    public function __construct(string $baseUrl, string $username, string $password, string $nodeHostname)
+    /**
+     * @param string $baseUrl       - آدرس پنل Remnawave مثال: https://panel.example.com
+     * @param string $apiToken      - API Token که از داشبورد Remnawave ساخته می‌شه
+     * @param string $nodeHostname  - آدرس سابسکریپشن مثال: https://sub.example.com
+     */
+    public function __construct(string $baseUrl, string $apiToken, string $nodeHostname)
     {
         $this->baseUrl = rtrim($baseUrl, '/');
-        $this->username = $username;
-        $this->password = $password;
+        $this->accessToken = trim($apiToken, '"\'\ ');
         $this->nodeHostname = rtrim($nodeHostname, '/');
-    }
-
-    public function login(): bool
-    {
-        try {
-            $response = Http::post($this->baseUrl . '/api/auth/login', [
-                'username' => $this->username,
-                'password' => $this->password,
-            ]);
-
-            if ($response->successful() && null !== $response->json('response.accessToken')) {
-                $this->accessToken = $response->json('response.accessToken');
-                return true;
-            }
-            return false;
-        } catch (\Exception $e) {
-            Log::error('Remnawave Login Exception:', ['message' => $e->getMessage()]);
-            return false;
-        }
     }
 
     public function createUser(array $userData): ?array
     {
         if (!$this->accessToken) {
-            if (!$this->login()) {
-                return ['detail' => 'Authentication failed'];
-            }
+            Log::error('Remnawave: API Token is not set.');
+            return ['detail' => 'API Token not configured'];
         }
 
         try {
-            // Convert timestamp to ISO 8601 string if expire is numeric
             $expireAt = null;
             if (isset($userData['expire']) && $userData['expire'] > 0) {
                 $expireAt = Carbon::createFromTimestamp($userData['expire'])->toIso8601String();
             } else {
-                // Remnawave typically requires expireAt for create, let's set a default far future if 0 (or adjust to project needs)
                 $expireAt = Carbon::now()->addYears(100)->toIso8601String();
             }
 
@@ -81,9 +61,7 @@ class RemnawaveService
 
     public function updateUser(string $username, array $userData): ?array
     {
-        if (!$this->accessToken) {
-            if (!$this->login()) return null;
-        }
+        if (!$this->accessToken) return null;
 
         try {
             $expireAt = null;
@@ -114,10 +92,8 @@ class RemnawaveService
 
     public function generateSubscriptionLink(array $userApiResponse): string
     {
-        // Remnawave returns subscriptionUrl in the user response object
         $subscriptionUrl = $userApiResponse['subscriptionUrl'] ?? '';
-        
-        // Sometimes the link might just be a path for nodeHostname, or a full URL
+
         if ($subscriptionUrl && !str_starts_with($subscriptionUrl, 'http')) {
             $subscriptionUrl = $this->nodeHostname . $subscriptionUrl;
         }
@@ -127,24 +103,11 @@ class RemnawaveService
 
     public function resetTraffic(string $identifier): ?array
     {
-        if (!$this->accessToken) {
-            if (!$this->login()) return null;
-        }
+        if (!$this->accessToken) return null;
 
         try {
-            // Check if identifier is a UUID (basic check)
-            $isUuid = preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i', $identifier);
-            $uuid = $identifier;
-
-            if (!$isUuid) {
-                $user = $this->getUser($identifier);
-                if ($user && isset($user['id'])) {
-                    $uuid = $user['id'];
-                } else {
-                    Log::error('Remnawave Reset Traffic User Not Found:', ['username' => $identifier]);
-                    return null;
-                }
-            }
+            $uuid = $this->resolveUuid($identifier);
+            if (!$uuid) return null;
 
             $response = Http::withToken($this->accessToken)
                 ->withHeaders(['Accept' => 'application/json'])
@@ -156,12 +119,10 @@ class RemnawaveService
             return null;
         }
     }
-    
+
     public function getUser(string $username): ?array
     {
-        if (!$this->accessToken) {
-            if (!$this->login()) return null;
-        }
+        if (!$this->accessToken) return null;
 
         try {
             $response = Http::withToken($this->accessToken)
@@ -177,20 +138,11 @@ class RemnawaveService
 
     public function disableUser(string $identifier): ?array
     {
-        if (!$this->accessToken) {
-            if (!$this->login()) return null;
-        }
+        if (!$this->accessToken) return null;
 
         try {
-            $isUuid = preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i', $identifier);
-            $uuid = $identifier;
-
-            if (!$isUuid) {
-                $user = $this->getUser($identifier);
-                if ($user && isset($user['id'])) {
-                    $uuid = $user['id'];
-                } else return null;
-            }
+            $uuid = $this->resolveUuid($identifier);
+            if (!$uuid) return null;
 
             $response = Http::withToken($this->accessToken)
                 ->withHeaders(['Accept' => 'application/json'])
@@ -205,20 +157,11 @@ class RemnawaveService
 
     public function enableUser(string $identifier): ?array
     {
-        if (!$this->accessToken) {
-            if (!$this->login()) return null;
-        }
+        if (!$this->accessToken) return null;
 
         try {
-            $isUuid = preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i', $identifier);
-            $uuid = $identifier;
-
-            if (!$isUuid) {
-                $user = $this->getUser($identifier);
-                if ($user && isset($user['id'])) {
-                    $uuid = $user['id'];
-                } else return null;
-            }
+            $uuid = $this->resolveUuid($identifier);
+            if (!$uuid) return null;
 
             $response = Http::withToken($this->accessToken)
                 ->withHeaders(['Accept' => 'application/json'])
@@ -233,20 +176,11 @@ class RemnawaveService
 
     public function deleteUser(string $identifier): bool
     {
-        if (!$this->accessToken) {
-            if (!$this->login()) return false;
-        }
+        if (!$this->accessToken) return false;
 
         try {
-            $isUuid = preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i', $identifier);
-            $uuid = $identifier;
-
-            if (!$isUuid) {
-                $user = $this->getUser($identifier);
-                if ($user && isset($user['id'])) {
-                    $uuid = $user['id'];
-                } else return false;
-            }
+            $uuid = $this->resolveUuid($identifier);
+            if (!$uuid) return false;
 
             $response = Http::withToken($this->accessToken)
                 ->withHeaders(['Accept' => 'application/json'])
@@ -257,5 +191,25 @@ class RemnawaveService
             Log::error('Remnawave Delete User Exception:', ['message' => $e->getMessage()]);
             return false;
         }
+    }
+
+    /**
+     * اگر identifier یه UUID هست همونو برمی‌گردونه
+     * اگر username هست، ابتدا User رو می‌گیره و UUID اونو برمی‌گردونه
+     */
+    protected function resolveUuid(string $identifier): ?string
+    {
+        $isUuid = preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i', $identifier);
+        if ($isUuid) {
+            return $identifier;
+        }
+
+        $user = $this->getUser($identifier);
+        if ($user && isset($user['id'])) {
+            return $user['id'];
+        }
+
+        Log::error('Remnawave: Could not resolve UUID for identifier:', ['identifier' => $identifier]);
+        return null;
     }
 }

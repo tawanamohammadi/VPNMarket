@@ -2109,8 +2109,7 @@ class WebhookController extends Controller
             elseif ($panelType === 'remnawave' && !$isMultiServer) {
                 $remnawave = new RemnawaveService(
                     $settings->get('remnawave_host'),
-                    $settings->get('remnawave_username'),
-                    $settings->get('remnawave_password'),
+                    $settings->get('remnawave_api_token'),
                     $settings->get('remnawave_node_hostname')
                 );
                 $response = $remnawave->createUser([
@@ -2705,8 +2704,7 @@ class WebhookController extends Controller
             elseif ($panelType === 'remnawave') {
                 $remnawave = new RemnawaveService(
                     $settings->get('remnawave_host'),
-                    $settings->get('remnawave_username'),
-                    $settings->get('remnawave_password'),
+                    $settings->get('remnawave_api_token'),
                     $settings->get('remnawave_node_hostname')
                 );
 
@@ -3355,8 +3353,7 @@ class WebhookController extends Controller
             } elseif ($panelType === 'remnawave') {
                 $remnawaveService = new RemnawaveService(
                     $settings->get('remnawave_host'),
-                    $settings->get('remnawave_username'),
-                    $settings->get('remnawave_password'),
+                    $settings->get('remnawave_api_token'),
                     $settings->get('remnawave_node_hostname')
                 );
                 $response = $remnawaveService->createUser([
