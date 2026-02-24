@@ -312,7 +312,13 @@ class ThemeSettings extends Page implements HasForms
                                 ->schema([
                                     TextInput::make('remnawave_host')->label('آدرس پنل Remnawave (مثال: https://panel.example.com)')->required(),
                                     TextInput::make('remnawave_api_token')->label('API Token (از داشبورد Remnawave بسازید)')->password()->required(),
-                                    TextInput::make('remnawave_squad_uuid')->label('Squad UUID (یو آیدی پیشفرض برای اتصال کاربران - اختیاری)'),
+                                    Select::make('remnawave_squad_uuid')
+                                        ->label('Squad پیش‌فرض (خرید سرویس)')
+                                        ->helperText('اکانت‌های خریداری شده به این Squad وصل می‌شوند.')
+                                        ->options(fn () => \App\Filament\Pages\ManageTrialSettings::getRemnawaveSquads())
+                                        ->searchable()
+                                        ->preload()
+                                        ->placeholder('انتخاب Squad...'),
                                     TextInput::make('remnawave_node_hostname')->label('آدرس سابسکریپشن (مثال: https://sub.example.com)')->required(),
 
                                 ]),

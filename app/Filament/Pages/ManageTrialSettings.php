@@ -44,7 +44,7 @@ class ManageTrialSettings extends Page implements HasForms
     /**
      * لیست Squad های Remnawave رو از API می‌گیره
      */
-    protected function getRemnawaveSquads(): array
+    public static function getRemnawaveSquads(): array
     {
         $settings = Setting::all()->pluck('value', 'key');
         $panelType = $settings->get('panel_type');
@@ -121,7 +121,7 @@ class ManageTrialSettings extends Page implements HasForms
                         Select::make('remnawave_squad_uuid')
                             ->label('اسکواد پیش‌فرض (Remnawave)')
                             ->helperText('اکانت‌های تست به این Squad وصل می‌شوند. فقط برای پنل Remnawave.')
-                            ->options(fn () => $this->getRemnawaveSquads())
+                            ->options(fn () => self::getRemnawaveSquads())
                             ->searchable()
                             ->preload()
                             ->placeholder('انتخاب Squad...')
